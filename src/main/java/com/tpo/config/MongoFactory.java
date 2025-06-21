@@ -1,22 +1,41 @@
 package com.tpo.config;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
 public class MongoFactory {
-    private static MongoClient mongoClient;
+    private static final MongoClient cliente;
+    private static final String DB_NAME;
+
     static {
-        String uri = AppConfig.get("mongo.uri");
-        ConnectionString connString = new ConnectionString(uri);
-        MongoClientSettings settings = MongoClientSettings.builder()
-                .applyConnectionString(connString)
-                .build();
-        mongoClient = MongoClients.create(settings);
+        try {
+            String uri = AppConfig.get("mongo.uri");
+            DB_NAME = AppConfig.get("mongo.db");
+            cliente = MongoClients.create(uri);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ExceptionInInitializerError("Error inicializando MongoFactory: " + e.getMessage());
+        }
     }
+
     public static MongoDatabase getDatabase() {
-        return mongoClient.getDatabase(AppConfig.get("mongo.db"));
+        return cliente.getDatabase(DB_NAME);
     }
+
+    private static void vaciarMongo() {
+        var db = MongoFactory.getDatabase();
+        db.getCollection("products").deleteMany(new org.bson.Document());
+        db.getCollection("product_history").deleteMany(new org.bson.Document());
+        System.out.println("Mongo: colecciones vaciadas");
+    }
+
+    public static MongoClient getClient() {
+        return cliente;
+    }
+
+    public static String getDatabaseName() {
+        return DB_NAME;
+    }
+
 }

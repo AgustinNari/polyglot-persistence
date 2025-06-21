@@ -13,4 +13,5 @@ public class CassandraTest {
         Row row = session.execute("SELECT release_version FROM system.local").one();
         assertNotNull(row.getString("release_version"));
     }
+
 }

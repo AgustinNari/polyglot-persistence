@@ -1,0 +1,22 @@
+USE TPO;
+GO
+-- Verificar si la columna no existe antes de agregar:
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME='Users' AND COLUMN_NAME='email'
+)
+BEGIN
+    ALTER TABLE dbo.Users
+    ADD email NVARCHAR(100) NULL;
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME='Users' AND COLUMN_NAME='contrasena'
+)
+BEGIN
+    ALTER TABLE dbo.Users
+    ADD contrasena NVARCHAR(100) NULL;
+END
+GO
