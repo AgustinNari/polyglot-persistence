@@ -80,7 +80,10 @@ public class App {
                 switch (opcion) {
                     case "1": registrarUsuario(); break;
                     case "2": login(); break;
-                    case "0": System.out.println("Saliendo..."); return;
+                    case "0": System.out.println("Saliendo...");
+                        // Para forzar salida inmediata:
+                        System.exit(0);
+                        return;
                     default: System.out.println("Opción inválida"); break;
                 }
             } else {
