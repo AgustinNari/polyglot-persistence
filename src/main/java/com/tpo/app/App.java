@@ -151,24 +151,28 @@ public class App {
                         } else {
                             System.out.println("Acceso denegado: solo usuarios ADMIN pueden actualizar productos.");
                         }
+                        break;
                     case "17":
                         if (usuarioLogueado.getRol() == RolUsuario.ADMIN) {
                             opcionEliminarProducto(); break;
                         } else {
                             System.out.println("Acceso denegado: solo usuarios ADMIN pueden eliminar productos.");
                         }
+                        break;
                     case "18":
                         if (usuarioLogueado.getRol() == RolUsuario.ADMIN) {
                             opcionVerHistorialProducto();
                         } else {
                             System.out.println("Acceso denegado: solo usuarios ADMIN pueden ver historial de cambios.");
                         }
+                        break;
                     case "19":
                         if (usuarioLogueado.getRol() == RolUsuario.ADMIN) {
                             opcionVerHistorialCompleto();
                         } else {
                             System.out.println("Acceso denegado: solo usuarios ADMIN pueden ver historial completo.");
                         }
+                        break;
                     case "20": opcionMostrarInfoSesion(); break;
                     case "21": opcionVerCategoria(); break;
                     case "22": logout(); break;
@@ -719,28 +723,34 @@ public class App {
 
     private static void opcionVerHistorialProducto() {
         try {
-            System.out.print("Ingrese ID de producto para ver historial: ");
-            String prodId = scanner.nextLine().trim();
-            List<RegistroCambioProducto> lista = registroCambioProductoDaoMongo.listarPorProducto(prodId);
-            if (lista.isEmpty()) {
-                System.out.println("No hay historial para el producto con ID: " + prodId);
-            } else {
-                System.out.printf("%-24s %-20s %-10s %-8s %-30s %-30s%n",
-                        "FechaCambio", "Operador", "Operación", "ProdID", "ValorAnterior", "ValorNuevo");
-                for (RegistroCambioProducto r : lista) {
-                    String fecha = r.getFechaCambio() != null ? r.getFechaCambio().toString() : "-";
-                    String operador = r.getOperador();
-                    String op = r.getTipoOperacion();
-                    String valorAnt = r.getValorAnterior() != null ? r.getValorAnterior().toString() : "null";
-                    String valorNue = r.getValorNuevo() != null ? r.getValorNuevo().toString() : "null";
-                    System.out.printf("%-24s %-20s %-10s %-8s %-30s %-30s%n",
-                            fecha, operador, op, prodId,
-                            abreviar(valorAnt, 30),
-                            abreviar(valorNue, 30));
-                }
+            System.out.print("Ingrese el ID del producto para ver historial de cambios: ");
+            String idProducto = scanner.nextLine().trim();
+            if (idProducto.isEmpty()) {
+                System.out.println("ID de producto vacío. Cancelado.");
+                return;
             }
+            List<RegistroCambioProducto> historial = servicioProducto.listarHistorialCambiosProducto(idProducto);
+            if (historial.isEmpty()) {
+                System.out.println("No se encontraron registros de cambios para el producto con ID: " + idProducto);
+                return;
+            }
+            System.out.println("=== Historial de cambios para producto ID: " + idProducto + " ===");
+            for (RegistroCambioProducto reg : historial) {
+                System.out.println("------------------------------------------");
+                System.out.println("Fecha cambio   : " + reg.getFechaCambio());
+                System.out.println("Operador       : " + reg.getOperador());
+                System.out.println("Tipo operación : " + reg.getTipoOperacion());
+                System.out.println("Valor anterior :");
+                System.out.print(ServicioProducto.formatearMapa(reg.getValorAnterior()));
+                System.out.println("Valor nuevo    :");
+                System.out.print(ServicioProducto.formatearMapa(reg.getValorNuevo()));
+            }
+            System.out.println("==========================================");
+        } catch (IllegalArgumentException iae) {
+            System.out.println("Error: " + iae.getMessage());
         } catch (Exception e) {
-            System.out.println("Error al ver historial de producto: " + e.getMessage());
+            System.out.println("Error al obtener historial de cambios: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            // e.printStackTrace(); // opcional en desarrollo
         }
     }
 

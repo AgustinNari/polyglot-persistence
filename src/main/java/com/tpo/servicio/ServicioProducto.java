@@ -74,6 +74,40 @@ public class ServicioProducto {
         return productoDao.listarTodos();
     }
 
+    public List<RegistroCambioProducto> listarHistorialCambiosProducto(String productoId) throws Exception {
+        if (productoId == null || productoId.isBlank()) {
+            throw new IllegalArgumentException("El id de producto no puede ser nulo o vacío");
+        }
+        // Opcional: verificar que el producto exista antes de listar historial:
+        Optional<Producto> opt = productoDao.buscarPorId(productoId);
+        if (opt.isEmpty()) {
+            throw new IllegalArgumentException("Producto no existe con id: " + productoId);
+        }
+        // Pedir listado de registros desde DAO:
+        return registroDao.listarPorProducto(productoId);
+    }
+
+
+    public List<RegistroCambioProducto> listarHistorialCompleto() throws Exception {
+        return registroDao.listarTodos();
+    }
+
+
+    public static String formatearMapa(Map<String,Object> mapa) {
+        if (mapa == null) {
+            return "(nulo)";
+        }
+        if (mapa.isEmpty()) {
+            return "(vacío)";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String,Object> e : mapa.entrySet()) {
+            String clave = e.getKey();
+            Object val = e.getValue();
+            sb.append("    ").append(clave).append(": ").append(val != null ? val.toString() : "null").append(System.lineSeparator());
+        }
+        return sb.toString();
+    }
 
     private Map<String,Object> toMap(Producto p) {
         Map<String,Object> map = new HashMap<>();
