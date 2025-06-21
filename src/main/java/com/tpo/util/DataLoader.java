@@ -80,10 +80,10 @@ public class DataLoader {
         servicioCarrito = new ServicioCarrito(carritoDaoRedis);
 
         PedidoDaoSql pedidoDaoSql = new PedidoDaoSql();
-        servicioPedido = new ServicioPedido(pedidoDaoSql, servicioCarrito, productoDaoMongo);
+        servicioPedido = new ServicioPedido(pedidoDaoSql, servicioCarrito, productoDaoMongo, servicioUsuario);
 
         FacturaDaoSql facturaDaoSql = new FacturaDaoSql();
-        servicioFactura = new ServicioFactura(facturaDaoSql, pedidoDaoSql);
+        servicioFactura = new ServicioFactura(facturaDaoSql, pedidoDaoSql, servicioUsuario, servicioPedido);
 
         PagoDaoSql pagoDaoSql = new PagoDaoSql();
         servicioPago = new ServicioPago(pagoDaoSql, facturaDaoSql);

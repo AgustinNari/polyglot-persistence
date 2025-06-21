@@ -12,4 +12,5 @@ public interface UsuarioDao {
     Optional<Usuario> buscarPorDocIdentidad(String docIdentidad) throws Exception;
     List<Usuario> listarTodos() throws Exception;
     long contarUsuarios() throws Exception; // contar usuarios totales
+    void incrementarMinutosActividad(Long usuarioId, long minutosMinutos) throws Exception;
 }

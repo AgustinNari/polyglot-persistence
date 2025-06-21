@@ -59,4 +59,13 @@ public class ServicioPago {
         }
         return guardado;
     }
+
+    public List<Pago> listarPagosPorUsuario(String usuarioId) throws Exception {
+        if (usuarioId == null || usuarioId.isEmpty()) {
+            throw new IllegalArgumentException("El ID de usuario no puede ser nulo o vacío");
+        }
+        return pagoDao.listarPorUsuario(Long.valueOf(usuarioId));
+    }
+
+
 }

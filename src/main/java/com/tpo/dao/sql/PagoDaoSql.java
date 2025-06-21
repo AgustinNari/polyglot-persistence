@@ -1,6 +1,7 @@
 package com.tpo.dao.sql;
 
 import com.tpo.dao.PagoDao;
+import com.tpo.modelo.pago.MedioPago;
 import com.tpo.modelo.pago.Pago;
 import com.tpo.config.SqlServerFactory;
 
@@ -92,20 +93,27 @@ public class PagoDaoSql implements PagoDao {
 
     @Override
     public List<Pago> listarPorUsuario(Long usuarioId) throws Exception {
-        String sql = "SELECT id FROM dbo.Pagos WHERE usuario_id = ?";
-        List<Pago> lista = new ArrayList<>();
+        String sql = "SELECT id, usuario_id, monto_total, fecha_pago, medio_pago, operador FROM dbo.Pagos WHERE usuario_id = ?";
         try (Connection conn = SqlServerFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, usuarioId);
             try (ResultSet rs = ps.executeQuery()) {
+                List<Pago> lista = new ArrayList<>();
                 while (rs.next()) {
-                    Long id = rs.getLong("id");
-                    buscarPorId(id).ifPresent(lista::add);
+                    Pago p = new Pago();
+                    p.setId(rs.getLong("id"));
+                    p.setUsuarioId(rs.getLong("usuario_id"));
+                    p.setMontoTotal(rs.getBigDecimal("monto_total"));
+                    p.setFechaPago(rs.getTimestamp("fecha_pago").toLocalDateTime());
+                    p.setMedioPago(MedioPago.valueOf(rs.getString("medio_pago")));
+                    p.setOperador(rs.getString("operador"));
+                    lista.add(p);
                 }
+                return lista;
             }
         }
-        return lista;
     }
+
 
     @Override
     public List<Pago> listarTodos() throws Exception {

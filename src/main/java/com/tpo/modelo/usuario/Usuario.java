@@ -1,6 +1,8 @@
 package com.tpo.modelo.usuario;
 
 import com.tpo.modelo.usuario.RolUsuario;
+
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Usuario {
@@ -11,10 +13,12 @@ public class Usuario {
     private String docIdentidad;
     private String email;
     private String contrasena;
-    private RolUsuario rol;  // Nuevo campo
+    private RolUsuario rol;
+    private LocalDateTime fechaCreacion;
+    private long totalMinutosActividad;  // acumulado
 
     // (Opcional) condición ante IVA
-    private String condicionIVA;
+    private CondicionIVA condicionIVA;
 
     public Usuario() {
         // Por defecto rol será asignado en el servicio
@@ -30,6 +34,7 @@ public class Usuario {
         setEmail(email);
         setContrasena(contrasena);
         setRol(rol);
+        this.fechaCreacion = LocalDateTime.now(); // fecha de creación por defecto
         // condición IVA por defecto si se desea
         this.condicionIVA = null;
     }
@@ -40,6 +45,11 @@ public class Usuario {
     }
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public long getTotalMinutosActividad() { return totalMinutosActividad; }
+    public void setTotalMinutosActividad(long totalMinutosActividad) {
+        this.totalMinutosActividad = totalMinutosActividad;
     }
 
     public String getNombre() {
@@ -113,11 +123,20 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public String getCondicionIVA() {
+
+    public CondicionIVA getCondicionIVA() {
         return condicionIVA;
     }
-    public void setCondicionIVA(String condicionIVA) {
+    public void setCondicionIVA(CondicionIVA condicionIVA) {
         this.condicionIVA = condicionIVA;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
     @Override
@@ -141,8 +160,10 @@ public class Usuario {
                 ", apellido='" + apellido + '\'' +
                 ", docIdentidad='" + docIdentidad + '\'' +
                 ", email='" + email + '\'' +
-                ", rol=" + rol +
-                ", condicionIVA=" + condicionIVA +
+                ", rol=" + rol + '\'' +
+                ", condicionIVA=" + condicionIVA + '\'' +
+                ", fechaCreacion=" + fechaCreacion +
+                ", totalMinutosActividad=" + totalMinutosActividad +
                 '}';
     }
 }

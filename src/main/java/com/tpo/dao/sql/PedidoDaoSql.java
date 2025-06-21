@@ -7,6 +7,7 @@ import com.tpo.modelo.pedido.EstadoPedido;
 import com.tpo.config.SqlServerFactory;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,49 +16,114 @@ public class PedidoDaoSql implements PedidoDao {
 
     @Override
     public Pedido guardar(Pedido pedido) throws Exception {
-        // Inserta en tabla Pedidos y luego en LineaPedido dentro de la misma transacción
-        String sqlInsertPedido = "INSERT INTO dbo.Pedidos (usuario_id, fecha_creacion, estado) VALUES (?, ?, ?)";
-        String sqlInsertLinea = "INSERT INTO dbo.LineaPedido (pedido_id, producto_id, cantidad, precio_unitario, descuento, impuesto, subtotal) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sqlInsertPedido = "INSERT INTO dbo.Pedidos (usuario_id, fecha_creacion, estado, importe_bruto, descuento_total, impuesto_total, importe_total) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = SqlServerFactory.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psPedido = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
-                psPedido.setLong(1, pedido.getUsuarioId());
-                psPedido.setTimestamp(2, Timestamp.valueOf(pedido.getFechaCreacion()));
-                psPedido.setString(3, pedido.getEstado().name());
-                int filas = psPedido.executeUpdate();
-                if (filas == 0) {
-                    throw new SQLException("No se pudo insertar el pedido");
+            try (PreparedStatement ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setLong(1, pedido.getUsuarioId());
+                // fecha_creacion: si tu tabla tiene DEFAULT, podrías omitir o setear explícitamente:
+                if (pedido.getFechaCreacion() != null) {
+                    ps.setTimestamp(2, Timestamp.valueOf(pedido.getFechaCreacion()));
+                } else {
+                    ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
                 }
-                Long pedidoId;
-                try (ResultSet rs = psPedido.getGeneratedKeys()) {
+                ps.setString(3, pedido.getEstado().name());
+                ps.setBigDecimal(4, pedido.getImporteBruto());
+                ps.setBigDecimal(5, pedido.getDescuentoTotal());
+                ps.setBigDecimal(6, pedido.getImpuestoTotal());
+                ps.setBigDecimal(7, pedido.getImporteTotal());
+                int filas = ps.executeUpdate();
+                if (filas == 0) {
+                    throw new SQLException("No se insertó el pedido");
+                }
+                try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        pedidoId = rs.getLong(1);
+                        long pedidoId = rs.getLong(1);
                         pedido.setId(pedidoId);
                     } else {
-                        throw new SQLException("No se obtuvo ID al insertar Pedido");
+                        throw new SQLException("No se obtuvo ID del pedido insertado");
                     }
                 }
-                // Insertar líneas
-                try (PreparedStatement psLinea = conn.prepareStatement(sqlInsertLinea)) {
-                    for (LineaPedido linea : pedido.getLineas()) {
-                        psLinea.setLong(1, pedidoId);
-                        psLinea.setString(2, linea.getProductoId());
-                        psLinea.setInt(3, linea.getCantidad());
-                        psLinea.setBigDecimal(4, linea.getPrecioUnitario());
-                        psLinea.setBigDecimal(5, linea.getDescuentoLinea() != null ? linea.getDescuentoLinea() : java.math.BigDecimal.ZERO);
-                        psLinea.setBigDecimal(6, linea.getImpuestoLinea() != null ? linea.getImpuestoLinea() : java.math.BigDecimal.ZERO);
-                        psLinea.setBigDecimal(7, linea.getSubtotalFinal());
-                        psLinea.addBatch();
+            }
+            // Insertar líneas
+            String sqlInsertLinea = "INSERT INTO dbo.LineaPedido (pedido_id, producto_id, cantidad, precio_unitario, descuento, impuesto, subtotal) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement psLinea = conn.prepareStatement(sqlInsertLinea, Statement.RETURN_GENERATED_KEYS)) {
+                for (LineaPedido lp : pedido.getLineas()) {
+                    psLinea.setLong(1, pedido.getId());
+                    psLinea.setString(2, lp.getProductoId());
+                    psLinea.setInt(3, lp.getCantidad());
+                    psLinea.setBigDecimal(4, lp.getPrecioUnitario());
+                    psLinea.setBigDecimal(5, lp.getDescuentoLinea());
+                    psLinea.setBigDecimal(6, lp.getImpuestoLinea());
+                    psLinea.setBigDecimal(7, lp.getSubtotalFinal());
+                    int filasL = psLinea.executeUpdate();
+                    if (filasL == 0) {
+                        throw new SQLException("No se insertó línea de pedido para producto " + lp.getProductoId());
                     }
-                    psLinea.executeBatch();
+                    try (ResultSet rsL = psLinea.getGeneratedKeys()) {
+                        if (rsL.next()) {
+                            long lineaId = rsL.getLong(1);
+                            lp.setId(lineaId);
+                            lp.setPedidoId(pedido.getId());
+                        }
+                    }
                 }
-                conn.commit();
-                return pedido;
-            } catch (Exception e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
+            }
+            conn.commit();
+            return pedido;
+        } catch (SQLException e) {
+            throw e;
+        }
+    }
+
+    @Override
+    public Optional<Pedido> buscarPorId(Long id) throws Exception {
+        String sqlPedido = "SELECT id, usuario_id, fecha_creacion, estado, importe_bruto, descuento_total, impuesto_total, importe_total " +
+                "FROM dbo.Pedidos WHERE id = ?";
+        String sqlLineas = "SELECT id, producto_id, cantidad, precio_unitario, descuento, impuesto, subtotal " +
+                "FROM dbo.LineaPedido WHERE pedido_id = ?";
+        try (Connection conn = SqlServerFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlPedido)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return Optional.empty();
+                }
+                Pedido pedido = new Pedido();
+                pedido.setId(rs.getLong("id"));
+                pedido.setUsuarioId(rs.getLong("usuario_id"));
+                Timestamp ts = rs.getTimestamp("fecha_creacion");
+                if (ts != null) {
+                    pedido.setFechaCreacion(ts.toLocalDateTime());
+                }
+                pedido.setEstado(EstadoPedido.valueOf(rs.getString("estado")));
+                pedido.setImporteBruto(rs.getBigDecimal("importe_bruto"));
+                pedido.setDescuentoTotal(rs.getBigDecimal("descuento_total"));
+                pedido.setImpuestoTotal(rs.getBigDecimal("impuesto_total"));
+                pedido.setImporteTotal(rs.getBigDecimal("importe_total"));
+                // Obtener líneas
+                try (PreparedStatement psL = conn.prepareStatement(sqlLineas)) {
+                    psL.setLong(1, id);
+                    try (ResultSet rsL = psL.executeQuery()) {
+                        List<LineaPedido> listaLineas = new ArrayList<>();
+                        while (rsL.next()) {
+                            LineaPedido lp = new LineaPedido();
+                            lp.setId(rsL.getLong("id"));
+                            lp.setPedidoId(id);
+                            lp.setProductoId(rsL.getString("producto_id"));
+                            lp.setCantidad(rsL.getInt("cantidad"));
+                            lp.setPrecioUnitario(rsL.getBigDecimal("precio_unitario"));
+                            lp.setDescuentoLinea(rsL.getBigDecimal("descuento"));
+                            lp.setImpuestoLinea(rsL.getBigDecimal("impuesto"));
+                            lp.setSubtotalFinal(rsL.getBigDecimal("subtotal")); // recalcula subtotal final
+                            listaLineas.add(lp);
+                        }
+                        pedido.setLineas(listaLineas);
+                    }
+                }
+                return Optional.of(pedido);
             }
         }
     }
@@ -71,64 +137,31 @@ public class PedidoDaoSql implements PedidoDao {
             ps.setLong(2, pedidoId);
             int filas = ps.executeUpdate();
             if (filas == 0) {
-                throw new SQLException("No se encontró Pedido con id " + pedidoId);
+                throw new SQLException("No se actualizó estado de pedido con id " + pedidoId);
             }
         }
     }
 
-    @Override
-    public Optional<Pedido> buscarPorId(Long pedidoId) throws Exception {
-        String sqlPedido = "SELECT id, usuario_id, fecha_creacion, estado FROM dbo.Pedidos WHERE id = ?";
-        String sqlLineas = "SELECT producto_id, cantidad, precio_unitario, descuento, impuesto, subtotal FROM dbo.LineaPedido WHERE pedido_id = ?";
-        try (Connection conn = SqlServerFactory.getConnection();
-             PreparedStatement psPedido = conn.prepareStatement(sqlPedido)) {
-            psPedido.setLong(1, pedidoId);
-            try (ResultSet rsPedido = psPedido.executeQuery()) {
-                if (!rsPedido.next()) {
-                    return Optional.empty();
-                }
-                Pedido pedido = new Pedido();
-                pedido.setId(rsPedido.getLong("id"));
-                pedido.setUsuarioId(rsPedido.getLong("usuario_id"));
-                Timestamp tsCreacion = rsPedido.getTimestamp("fecha_creacion");
-                pedido.setFechaCreacion(tsCreacion.toLocalDateTime());
-                pedido.setEstado(EstadoPedido.valueOf(rsPedido.getString("estado")));
-                // Recuperar líneas
-                try (PreparedStatement psLineas = conn.prepareStatement(sqlLineas)) {
-                    psLineas.setLong(1, pedidoId);
-                    try (ResultSet rsLineas = psLineas.executeQuery()) {
-                        while (rsLineas.next()) {
-                            LineaPedido linea = new LineaPedido();
-                            linea.setProductoId(rsLineas.getString("producto_id"));
-                            linea.setCantidad(rsLineas.getInt("cantidad"));
-                            linea.setPrecioUnitario(rsLineas.getBigDecimal("precio_unitario"));
-                            linea.setDescuentoLinea(rsLineas.getBigDecimal("descuento"));
-                            linea.setImpuestoLinea(rsLineas.getBigDecimal("impuesto"));
-                            linea.recalcularSubtotal();
-                            pedido.agregarLinea(linea);
-                        }
-                    }
-                }
-                return Optional.of(pedido);
-            }
-        }
-    }
-
-    @Override
+    // Método adicional: listar pedidos por usuario
     public List<Pedido> listarPorUsuario(Long usuarioId) throws Exception {
-        String sql = "SELECT id FROM dbo.Pedidos WHERE usuario_id = ?";
-        List<Pedido> lista = new ArrayList<>();
+        String sql = "SELECT id, usuario_id, fecha_creacion, estado FROM dbo.Pedidos WHERE usuario_id = ?";
         try (Connection conn = SqlServerFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, usuarioId);
             try (ResultSet rs = ps.executeQuery()) {
+                List<Pedido> lista = new ArrayList<>();
                 while (rs.next()) {
-                    Long id = rs.getLong("id");
-                    buscarPorId(id).ifPresent(lista::add);
+                    Pedido p = new Pedido();
+                    p.setId(rs.getLong("id"));
+                    p.setUsuarioId(rs.getLong("usuario_id"));
+                    p.setFechaCreacion(rs.getTimestamp("fecha_creacion").toLocalDateTime());
+                    p.setEstado(EstadoPedido.valueOf(rs.getString("estado")));
+                    // Opcional: cargar líneas si se desea detalle
+                    lista.add(p);
                 }
+                return lista;
             }
         }
-        return lista;
     }
 
     @Override

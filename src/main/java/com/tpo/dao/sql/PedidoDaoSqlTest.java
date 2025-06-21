@@ -60,7 +60,7 @@ public class PedidoDaoSqlTest {
         assertEquals(usuarioId, rec.getUsuarioId());
         assertEquals(2, rec.getLineas().size(), "Debe tener 2 líneas");
         BigDecimal totalEsperado = linea1.getSubtotalFinal().add(linea2.getSubtotalFinal());
-        assertEquals(0, rec.getTotal().compareTo(totalEsperado), "El total debe coincidir");
+        assertEquals(0, rec.getImporteTotal().compareTo(totalEsperado), "El total debe coincidir");
 
         // Limpiar: eliminar pedido y sus líneas.
         // Como no tenemos método eliminar en DAO, podemos:

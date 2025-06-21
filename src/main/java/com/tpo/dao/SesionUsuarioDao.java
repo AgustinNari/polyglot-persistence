@@ -2,6 +2,7 @@ package com.tpo.dao;
 
 import com.tpo.modelo.sesion.SesionUsuario;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SesionUsuarioDao {
@@ -10,4 +11,5 @@ public interface SesionUsuarioDao {
     // Registrar logout: usa mismo usuarioId y fechaLogin para actualizar logout_time
     void registrarLogout(String usuarioId, java.time.LocalDate fechaLoginDate, java.time.LocalDateTime fechaLoginTime, java.time.LocalDateTime fechaLogoutTime) throws Exception;
     List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, java.time.LocalDate desde, java.time.LocalDate hasta) throws Exception;
+    long sumarMinutosActividadDesde(String userId, LocalDateTime desde);
 }

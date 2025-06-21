@@ -1,6 +1,7 @@
 package com.tpo.modelo.sesion;
 
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -9,6 +10,7 @@ public class SesionUsuario {
     private String usuarioId;
     private LocalDateTime fechaLogin;
     private LocalDateTime fechaLogout;
+    private Instant loginInstant;
 
     public SesionUsuario() {}
 
@@ -48,6 +50,10 @@ public class SesionUsuario {
     public int hashCode() {
         return Objects.hash(usuarioId, fechaLogin);
     }
+
+    public Instant getLoginInstant() { return loginInstant; }
+    public void setLoginInstant(Instant loginInstant) { this.loginInstant = loginInstant; }
+
 
     @Override
     public String toString() {

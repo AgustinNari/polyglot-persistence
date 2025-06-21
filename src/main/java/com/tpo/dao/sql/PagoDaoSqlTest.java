@@ -43,7 +43,7 @@ public class PagoDaoSqlTest {
         pedidoTest.agregarLinea(linea);
         pedidoTest = pedidoDao.guardar(pedidoTest);
         // Crear factura
-        BigDecimal bruto = pedidoTest.getTotal();
+        BigDecimal bruto = pedidoTest.getImporteTotal();
         BigDecimal descuento = BigDecimal.ZERO;
         BigDecimal impuesto = new BigDecimal("7.50"); // si tu subtotalFinal incluye impuesto, asegúrate de lógica
         facturaTest = new Factura(pedidoTest.getId(), usuarioTest.getId(), bruto, descuento, impuesto);

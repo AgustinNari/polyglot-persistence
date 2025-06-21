@@ -20,9 +20,9 @@ public class LineaPedido {
         setProductoId(productoId);
         setCantidad(cantidad);
         setPrecioUnitario(precioUnitario);
-        setDescuentoLinea(descuentoLinea);
-        setImpuestoLinea(impuestoLinea);
-        calcularSubtotalFinal();
+        this.descuentoLinea = (descuentoLinea != null ? descuentoLinea : BigDecimal.ZERO);
+        this.impuestoLinea = (impuestoLinea != null ? impuestoLinea : BigDecimal.ZERO);
+        recalcularSubtotal();
     }
 
     public String getProductoId() { return productoId; }
@@ -59,11 +59,17 @@ public class LineaPedido {
         this.impuestoLinea = impuestoLinea != null ? impuestoLinea : BigDecimal.ZERO;
     }
 
+    public void setSubtotalFinal(BigDecimal subtotalFinal) { this.subtotalFinal = subtotalFinal; }
     public BigDecimal getSubtotalFinal() { return subtotalFinal; }
     private void calcularSubtotalFinal() {
         BigDecimal base = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
         this.subtotalFinal = base.subtract(descuentoLinea).add(impuestoLinea);
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getPedidoId() { return pedidoId; }
+    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
 
     @Override
     public boolean equals(Object o) {

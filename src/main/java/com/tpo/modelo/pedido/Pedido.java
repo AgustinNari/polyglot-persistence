@@ -12,17 +12,26 @@ public class Pedido {
     private Long id;
     private Long usuarioId;
     private List<LineaPedido> lineas = new ArrayList<>();
-    private BigDecimal total; // suma de subtotalFinal de lineas
     private LocalDateTime fechaCreacion;
     private EstadoPedido estado; // enum, por ejemplo: CREADO, FACTURADO, CANCELADO
+
+    // Desglose de importes:
+    private BigDecimal importeBruto;    // suma de subtotales de líneas
+    private BigDecimal descuentoTotal;
+    private BigDecimal impuestoTotal;
+    private BigDecimal importeTotal;    // importeBruto - descuentoTotal + impuestoTotal
+
 
     public Pedido() {}
 
     public Pedido(Long usuarioId) {
-        setUsuarioId(usuarioId);
+        this.usuarioId = usuarioId;
         this.fechaCreacion = LocalDateTime.now();
         this.estado = EstadoPedido.CREADO;
-        this.total = BigDecimal.ZERO;
+        this.importeBruto = BigDecimal.ZERO;
+        this.descuentoTotal = BigDecimal.ZERO;
+        this.impuestoTotal = BigDecimal.ZERO;
+        this.importeTotal = BigDecimal.ZERO;
     }
 
     public Long getId() { return id; }
@@ -42,12 +51,31 @@ public class Pedido {
         recalcularTotal();
     }
 
-    public void agregarLinea(LineaPedido linea) {
-        if (linea == null) {
-            throw new IllegalArgumentException("La línea no puede ser nula");
+    public void agregarLinea(LineaPedido lp) {
+        if (lp == null) {
+            throw new IllegalArgumentException("La línea de pedido no puede ser nula");
         }
-        this.lineas.add(linea);
-        recalcularTotal();
+        // Recalcular subtotal final de la línea por si no se hizo:
+        lp.recalcularSubtotal(); // subtotalFinal = precio*cant - desc + iva
+
+        // Base de la línea (precio * cantidad), sin descuento ni IVA:
+        BigDecimal baseLinea = lp.getPrecioUnitario().multiply(BigDecimal.valueOf(lp.getCantidad()));
+
+        // Inicializar campos si es null:
+        if (importeBruto == null) importeBruto = BigDecimal.ZERO;
+        if (descuentoTotal == null) descuentoTotal = BigDecimal.ZERO;
+        if (impuestoTotal == null) impuestoTotal = BigDecimal.ZERO;
+        if (importeTotal == null) importeTotal = BigDecimal.ZERO;
+
+        // Acumular:
+        importeBruto = importeBruto.add(baseLinea);
+        descuentoTotal = descuentoTotal.add(lp.getDescuentoLinea());
+        impuestoTotal = impuestoTotal.add(lp.getImpuestoLinea());
+        // Recalcular importeTotal:
+        importeTotal = importeBruto.subtract(descuentoTotal).add(impuestoTotal);
+
+        // Añadir la línea a la lista:
+        lineas.add(lp);
     }
 
     public void eliminarLinea(String productoId) {
@@ -56,18 +84,52 @@ public class Pedido {
     }
 
     private void recalcularTotal() {
-        this.total = lineas.stream()
-                .map(LineaPedido::getSubtotalFinal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal sumaBase = BigDecimal.ZERO;
+        BigDecimal sumaDesc = BigDecimal.ZERO;
+        BigDecimal sumaImp = BigDecimal.ZERO;
+        for (LineaPedido lp : lineas) {
+            BigDecimal baseLinea = lp.getPrecioUnitario().multiply(BigDecimal.valueOf(lp.getCantidad()));
+            sumaBase = sumaBase.add(baseLinea);
+            sumaDesc = sumaDesc.add(lp.getDescuentoLinea());
+            sumaImp = sumaImp.add(lp.getImpuestoLinea());
+        }
+        this.importeBruto = sumaBase;
+        this.descuentoTotal = sumaDesc;
+        this.impuestoTotal = sumaImp;
+        this.importeTotal = importeBruto.subtract(descuentoTotal).add(impuestoTotal);
     }
 
-    public BigDecimal getTotal() { return total; }
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
 
     public EstadoPedido getEstado() { return estado; }
     public void setEstado(EstadoPedido estado) { this.estado = estado; }
+
+    public BigDecimal getImporteBruto() {
+        return importeBruto;
+    }
+    public void setImporteBruto(BigDecimal importeBruto) {
+        this.importeBruto = importeBruto != null ? importeBruto : BigDecimal.ZERO;
+    }
+    public BigDecimal getDescuentoTotal() {
+        return descuentoTotal;
+    }
+    public void setDescuentoTotal(BigDecimal descuentoTotal) {
+        this.descuentoTotal = descuentoTotal != null ? descuentoTotal : BigDecimal.ZERO;
+    }
+    public BigDecimal getImpuestoTotal() {
+        return impuestoTotal;
+    }
+    public void setImpuestoTotal(BigDecimal impuestoTotal) {
+        this.impuestoTotal = impuestoTotal != null ? impuestoTotal : BigDecimal.ZERO;
+    }
+    public BigDecimal getImporteTotal() {
+        return importeTotal;
+    }
+    public void setImporteTotal(BigDecimal importeTotal) {
+        this.importeTotal = importeTotal != null ? importeTotal : BigDecimal.ZERO;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -87,9 +149,13 @@ public class Pedido {
         return "Pedido{" +
                 "id=" + id +
                 ", usuarioId=" + usuarioId +
-                ", total=" + total +
                 ", fechaCreacion=" + fechaCreacion +
                 ", estado=" + estado +
+                ", importeBruto=" + importeBruto +
+                ", descuentoTotal=" + descuentoTotal +
+                ", impuestoTotal=" + impuestoTotal +
+                ", importeTotal=" + importeTotal +
+                ", lineas=" + lineas +
                 '}';
     }
 }

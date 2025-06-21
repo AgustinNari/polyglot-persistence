@@ -82,7 +82,7 @@ public class FacturaDaoSqlTest {
         // Verificar que setup creó pedidoTest; si no, fallar temprano
         assertNotNull(pedidoTest, "El pedidoTest no se creó correctamente en setup");
         // Calcular totales para la factura:
-        BigDecimal bruto = pedidoTest.getTotal();
+        BigDecimal bruto = pedidoTest.getImporteTotal();
         BigDecimal descuentoTotal = BigDecimal.ZERO;
         BigDecimal impuestoTotal = new BigDecimal("10.00");
         // Crear Factura
