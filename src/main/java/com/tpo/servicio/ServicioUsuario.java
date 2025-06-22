@@ -110,7 +110,7 @@ public class ServicioUsuario {
         if (log != null) {
             LocalDate fechaLoginDate = fechaLoginTime.toLocalDate();
             LocalDateTime fechaLogoutTime = LocalDateTime.now();
-            sesionUsuarioDao.registrarLogout(userIdStr, fechaLoginDate, fechaLoginTime, fechaLogoutTime);
+            sesionUsuarioDao.registrarLogout(userIdStr, fechaLogoutTime);
             sesionesActivas.remove(userIdStr);
 
 

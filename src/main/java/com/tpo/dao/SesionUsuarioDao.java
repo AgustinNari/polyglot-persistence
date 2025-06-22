@@ -8,7 +8,7 @@ public interface SesionUsuarioDao {
 
     void registrarInicioSesion(SesionUsuario log) throws Exception;
 
-    void registrarLogout(String usuarioId, java.time.LocalDate fechaLoginDate, java.time.LocalDateTime fechaLoginTime, java.time.LocalDateTime fechaLogoutTime) throws Exception;
+    void registrarLogout(String usuarioId, java.time.LocalDateTime fechaLogoutTime) throws Exception;
     List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, java.time.LocalDate actual) throws Exception;
 
 }

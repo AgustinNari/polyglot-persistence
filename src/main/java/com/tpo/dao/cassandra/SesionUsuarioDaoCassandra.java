@@ -31,14 +31,43 @@ public class SesionUsuarioDaoCassandra implements SesionUsuarioDao {
     }
 
     @Override
-    public void registrarLogout(String usuarioId, LocalDate fechaLoginDate, LocalDateTime fechaLoginTime, LocalDateTime fechaLogoutTime) throws Exception {
-        Instant loginInstant = fechaLoginTime.atZone(ZoneId.systemDefault()).toInstant();
-        Instant logoutInstant = fechaLogoutTime.atZone(ZoneId.systemDefault()).toInstant();
-        SimpleStatement stmt = SimpleStatement.builder(
-                        "UPDATE user_logs SET logout_time = ? WHERE user_id = ? AND log_date = ? AND login_time = ?")
-                .addPositionalValues(logoutInstant, usuarioId, fechaLoginDate, loginInstant)
+    public void registrarLogout(String usuarioId, LocalDateTime fechaLogoutTime) throws Exception {
+        LocalDate logDate = fechaLogoutTime.toLocalDate();
+
+
+        SimpleStatement selectStmt = SimpleStatement.builder(
+                        "SELECT login_time, logout_time FROM user_logs WHERE user_id = ? AND log_date = ?")
+                .addPositionalValues(usuarioId, logDate)
                 .build();
-        session.execute(stmt);
+        ResultSet rs = session.execute(selectStmt);
+
+        Instant loginToUpdate = null;
+        for (Row row : rs) {
+            Instant logoutInst = row.getInstant("logout_time");
+            if (logoutInst == null) {
+
+                Instant candidateLogin = row.getInstant("login_time");
+                if (loginToUpdate == null || candidateLogin.isAfter(loginToUpdate)) {
+                    loginToUpdate = candidateLogin;
+                }
+            }
+        }
+
+        if (loginToUpdate == null) {
+
+            System.err.println("Warning: no se encontró sesión abierta (logout_time=null) para usuario "
+                    + usuarioId + " en fecha " + logDate + ". No se actualiza logout.");
+            return;
+        }
+
+        Instant logoutInstant = fechaLogoutTime.atZone(ZoneId.systemDefault()).toInstant();
+
+
+        SimpleStatement updateStmt = SimpleStatement.builder(
+                        "UPDATE user_logs SET logout_time = ? WHERE user_id = ? AND log_date = ? AND login_time = ?")
+                .addPositionalValues(logoutInstant, usuarioId, logDate, loginToUpdate)
+                .build();
+        session.execute(updateStmt);
     }
 
     @Override

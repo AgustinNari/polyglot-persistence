@@ -177,13 +177,14 @@ public class App {
                         if (usuarioLogueado != null) {
                             System.out.println("Saliendo de la aplicación: realizando logout automático...");
                             try {
-                                servicioUsuario.logout(usuarioLogueado, fechaLoginActual);
+                                logout();
                                 System.out.println("Logout automático completado. Tiempo de sesión acumulado.");
                             } catch (Exception e) {
                                 System.out.println("Error al realizar logout automático: " + e.getMessage());
                             }
                         } else {
                             System.out.println("Saliendo de la aplicación...");
+
                         }
                         System.exit(0);
                         return;
