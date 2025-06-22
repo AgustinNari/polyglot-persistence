@@ -42,11 +42,11 @@ public class SesionUsuarioDaoCassandra implements SesionUsuarioDao {
     }
 
     @Override
-    public List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, LocalDate desde, LocalDate hasta) throws Exception {
+    public List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, LocalDate actual) throws Exception {
         List<SesionUsuario> lista = new ArrayList<>();
         SimpleStatement stmt = SimpleStatement.builder(
-                        "SELECT user_id, log_date, login_time, logout_time FROM user_logs WHERE user_id = ? AND log_date >= ? AND log_date <= ?")
-                .addPositionalValues(usuarioId, desde, hasta)
+                        "SELECT user_id, log_date, login_time, logout_time FROM user_logs WHERE user_id = ? AND log_date = ?")
+                .addPositionalValues(usuarioId, actual)
                 .build();
         ResultSet rs = session.execute(stmt);
         for (Row row : rs) {

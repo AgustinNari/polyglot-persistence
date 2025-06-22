@@ -53,7 +53,7 @@ public class SesionUsuarioDaoCassandraTest {
 
         // Listar logs en rango de hoy
         LocalDate hoy = LocalDate.now();
-        List<SesionUsuario> lista = sesionUsuarioDao.listarPorUsuarioYRango(usuarioId, hoy.minusDays(1), hoy.plusDays(1));
+        List<SesionUsuario> lista = sesionUsuarioDao.listarPorUsuarioYRango(usuarioId, hoy);
         boolean encontrado = lista.stream().anyMatch(l ->
                 l.getFechaLogin().equals(loginTime) &&
                         l.getFechaLogout() != null &&

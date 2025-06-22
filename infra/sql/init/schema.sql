@@ -1,6 +1,6 @@
 -- 1. Crear la base de datos TPO si no existe
 
-DROP DATABASE TPO;
+--DROP DATABASE TPO;
 
 IF DB_ID('TPO') IS NULL
 BEGIN

@@ -140,70 +140,6 @@ public class ServicioUsuario {
     }
 
 
-        /**
-         * Calcula la categoría del usuario para una fecha dada:
-         * Suma todos los minutos de sesiones ese día y categoriza TOP (>240), MEDIUM (120-240], LOW (<120).
-         * Opcional: guardar el resultado en SQL o cache en Redis.
-         */
-        public String calcularCategoriaDiaria (Usuario u, LocalDate fecha) throws Exception {
-            List<SesionUsuario> logs = sesionUsuarioDao.listarPorUsuarioYRango(
-                    String.valueOf(u.getId()), fecha, fecha);
-            long minutosTotales = 0;
-            for (SesionUsuario log : logs) {
-                LocalDateTime login = log.getFechaLogin();
-                LocalDateTime logout = log.getFechaLogout();
-                if (logout == null) {
-                    logout = LocalDateTime.now();
-                }
-                Duration dur = Duration.between(login, logout);
-                minutosTotales += dur.toMinutes();
-
-            }
-            System.out.println("Minutos totales: " + minutosTotales);
-            if (minutosTotales > 240) {
-                return "TOP";
-            } else if (minutosTotales >= 120) {
-                return "MEDIUM";
-            } else {
-                return "LOW";
-            }
-        }
-
-    /**
-     * Suma los minutos de actividad desde la fecha de creación hasta hoy, iterando día a día.
-     * Reutiliza la lógica de calcularCategoriaDiaria para cada día.
-     * @return total minutos sumados en todo el rango.
-     */
-    private long sumarMinutosDesdeFechaCreacion(Usuario usuario) throws Exception {
-        LocalDate fechaInicio = usuario.getFechaCreacion().toLocalDate();
-        LocalDate fechaFin = LocalDate.now();
-        long totalMinutos = 0;
-        for (LocalDate fecha = fechaInicio; !fecha.isAfter(fechaFin); fecha = fecha.plusDays(1)) {
-            // Para cada día, sumar minutos de sesiones de ese día:
-            List<SesionUsuario> logs = sesionUsuarioDao.listarPorUsuarioYRango(
-                    String.valueOf(usuario.getId()), fecha, fecha);
-            long minutosDia = 0;
-            for (SesionUsuario log : logs) {
-                LocalDateTime login = log.getFechaLogin();
-                LocalDateTime logout = log.getFechaLogout();
-                if (login == null) {
-                    continue;
-                }
-                if (logout == null) {
-                    logout = LocalDateTime.now().withNano(0);
-                }
-                Duration dur = Duration.between(login, logout);
-                long mins = dur.toMinutes();
-                minutosDia += mins;
-            }
-            System.out.println("[DEBUG] sumarMinutosDesdeFechaCreacion - Usuario " + usuario.getId() +
-                    ", fecha " + fecha + ", minutosDia=" + minutosDia);
-            totalMinutos += minutosDia;
-        }
-        System.out.println("[DEBUG] sumarMinutosDesdeFechaCreacion - Usuario " + usuario.getId() +
-                ", totalMinutos=" + totalMinutos);
-        return totalMinutos/60; // Convertir a minutos
-    }
 
     /**
      * Obtiene la categoría promedio del usuario calculando el promedio diario de minutos de actividad
@@ -241,10 +177,6 @@ public class ServicioUsuario {
     }
 
 
-    public List<SesionUsuario> listarSesionesPorRango(Usuario u, LocalDate desde, LocalDate hasta) throws Exception {
-        String userIdStr = String.valueOf(u.getId());
-        return sesionUsuarioDao.listarPorUsuarioYRango(userIdStr, desde, hasta);
-    }
 
     public List<SesionUsuario> listarTodasSesiones(Usuario u) throws Exception {
         if (u.getId() == null || u.getFechaCreacion() == null) {
@@ -252,14 +184,9 @@ public class ServicioUsuario {
         }
         LocalDate desde = u.getFechaCreacion().toLocalDate();
         LocalDate hasta = LocalDate.now();
-        return sesionUsuarioDao.listarPorUsuarioYRango(String.valueOf(u.getId()), desde, hasta);
+        return sesionUsuarioDao.listarPorUsuarioYRango(String.valueOf(u.getId()), LocalDate.now());
     }
 
-
-
-
-    public List<SesionUsuario> listarSesionesActivas( String usuarioId) throws Exception {
-        return sesionUsuarioDao.listarPorUsuarioYRango(usuarioId, LocalDate.now(), LocalDate.now()); }
 
 
 }

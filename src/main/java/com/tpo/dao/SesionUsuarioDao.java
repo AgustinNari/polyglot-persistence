@@ -10,6 +10,6 @@ public interface SesionUsuarioDao {
     void registrarInicioSesion(SesionUsuario log) throws Exception;
     // Registrar logout: usa mismo usuarioId y fechaLogin para actualizar logout_time
     void registrarLogout(String usuarioId, java.time.LocalDate fechaLoginDate, java.time.LocalDateTime fechaLoginTime, java.time.LocalDateTime fechaLogoutTime) throws Exception;
-    List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, java.time.LocalDate desde, java.time.LocalDate hasta) throws Exception;
+    List<SesionUsuario> listarPorUsuarioYRango(String usuarioId, java.time.LocalDate actual) throws Exception;
     long sumarMinutosActividadDesde(String userId, LocalDateTime desde);
 }

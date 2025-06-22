@@ -515,7 +515,6 @@ public class App {
 
     private static void opcionVerCategoria() {
         try {
-            String categoria2 = servicioUsuario.calcularCategoriaDiaria(usuarioLogueado, LocalDate.now());
             String categoria = String.valueOf(servicioUsuario.obtenerCategoriaPromedio(usuarioLogueado));
             System.out.println("Categoría para " + usuarioLogueado.getNombre() + ": " + categoria);
         } catch (Exception e) {
