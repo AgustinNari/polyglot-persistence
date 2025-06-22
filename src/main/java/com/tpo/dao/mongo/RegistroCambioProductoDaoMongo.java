@@ -12,7 +12,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
 
 public class RegistroCambioProductoDaoMongo implements RegistroCambioProductoDao {
 
@@ -57,14 +57,14 @@ public class RegistroCambioProductoDaoMongo implements RegistroCambioProductoDao
             doc.put("_id", new ObjectId(r.getId()));
         }
         doc.put("productoId", r.getProductoId());
-        // fechaCambio: LocalDateTime → Date
+
         LocalDateTime ldt = r.getFechaCambio();
         if (ldt != null) {
             doc.put("fechaCambio", java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()));
         }
         doc.put("operador", r.getOperador());
         doc.put("tipoOperacion", r.getTipoOperacion());
-        // valorAnterior y valorNuevo: Map<String, Object>. Convertir a Document directamente si valores son serializables
+
         if (r.getValorAnterior() != null) {
             doc.put("valorAnterior", new Document(r.getValorAnterior()));
         }

@@ -33,7 +33,6 @@ public class ServicioCarrito {
     }
 
     public void eliminarLinea(String usuarioId, String productoId) throws Exception {
-        // Antes de eliminar, podemos obtener la línea para registrar acción
         List<LineaCarrito> existentes = carritoDao.obtenerLineas(usuarioId);
         for (LineaCarrito l : existentes) {
             if (l.getProductoId().equals(productoId)) {

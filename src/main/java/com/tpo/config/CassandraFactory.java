@@ -2,7 +2,6 @@ package com.tpo.config;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
-import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 
 import java.net.InetSocketAddress;
 
@@ -15,13 +14,13 @@ public class CassandraFactory {
         String dc = AppConfig.get("cassandra.datacenter");
         String keyspace = AppConfig.get("cassandra.keyspace");
 
-        // 1. Crear una sesión inicial sin keyspace
+
         CqlSession tempSession = CqlSession.builder()
                 .addContactPoint(new InetSocketAddress("host.docker.internal", port))
                 .withLocalDatacenter(dc)
                 .build();
 
-        // 2. Verificar si el keyspace existe; si no, crearlo
+
         boolean exists = tempSession.getMetadata()
                 .getKeyspaces()
                 .containsKey(CqlIdentifier.fromCql(keyspace));
@@ -32,10 +31,10 @@ public class CassandraFactory {
             tempSession.execute(createKsCql);
         }
 
-        // 3. Cerrar la sesión temporal
+
         tempSession.close();
 
-        // 4. Crear la sesión definitiva con keyspace
+
         session = CqlSession.builder()
                 .addContactPoint(new InetSocketAddress(host, port))
                 .withLocalDatacenter(dc)

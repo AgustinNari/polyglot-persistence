@@ -95,67 +95,7 @@ public class FacturaDaoSql implements FacturaDao {
         }
     }
 
-    public List<Factura> listarFacturasPorPago(Long pagoId) throws Exception {
-        String sql = "SELECT f.id, f.pedido_id, f.usuario_id, f.importe_bruto, f.descuento_total, f.impuesto_total, f.importe_total, f.fecha_emision, f.estado " +
-                "FROM dbo.Facturas f " +
-                "JOIN dbo.Factura_Pago fp ON f.id = fp.factura_id " +
-                "WHERE fp.pago_id = ?";
-        try (Connection conn = SqlServerFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, pagoId);
-            try (ResultSet rs = ps.executeQuery()) {
-                List<Factura> lista = new ArrayList<>();
-                while (rs.next()) {
-                    Factura f = new Factura();
-                    f.setId(rs.getLong("id"));
-                    f.setPedidoId(rs.getLong("pedido_id"));
-                    f.setUsuarioId(rs.getLong("usuario_id"));
-                    f.setImporteBruto(rs.getBigDecimal("importe_bruto"));
-                    f.setDescuentoTotal(rs.getBigDecimal("descuento_total"));
-                    f.setImpuestoTotal(rs.getBigDecimal("impuesto_total"));
-                    f.setImporteTotal(rs.getBigDecimal("importe_total"));
-                    f.setFechaEmision(rs.getTimestamp("fecha_emision").toLocalDateTime());
-                    f.setEstado(EstadoFactura.valueOf(rs.getString("estado")));
-                    lista.add(f);
-                }
-                return lista;
-            }
-        }
-    }
 
-
-    @Override
-    public List<Factura> listarPendientesPorUsuario(Long usuarioId) throws Exception {
-        String sql = "SELECT id FROM dbo.Facturas WHERE usuario_id = ? AND estado = ?";
-        List<Factura> lista = new ArrayList<>();
-        try (Connection conn = SqlServerFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, usuarioId);
-            ps.setString(2, EstadoFactura.PENDIENTE_PAGO.name());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Long id = rs.getLong("id");
-                    buscarPorId(id).ifPresent(lista::add);
-                }
-            }
-        }
-        return lista;
-    }
-
-    @Override
-    public List<Factura> listarTodas() throws Exception {
-        String sql = "SELECT id FROM dbo.Facturas";
-        List<Factura> lista = new ArrayList<>();
-        try (Connection conn = SqlServerFactory.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                Long id = rs.getLong("id");
-                buscarPorId(id).ifPresent(lista::add);
-            }
-        }
-        return lista;
-    }
 
     private Factura mapearFactura(ResultSet rs) throws SQLException {
         Factura f = new Factura();

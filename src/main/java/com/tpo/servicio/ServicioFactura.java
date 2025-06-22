@@ -7,12 +7,12 @@ import com.tpo.modelo.factura.Factura;
 import com.tpo.modelo.factura.EstadoFactura;
 import com.tpo.modelo.pedido.EstadoPedido;
 import com.tpo.modelo.usuario.Usuario;
-import com.tpo.servicio.ServicioUsuario;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 
 public class ServicioFactura {
 
@@ -29,27 +29,24 @@ public class ServicioFactura {
         this.servicioPedido = servicioPedido;
     }
 
-    /**
-     * Genera una factura a partir de un pedido existente. Calcula importes: bruto, descuentos, impuestos.
-     * Luego guarda en SQL y actualiza estado de pedido a FACTURADO.
-     */
+
     public Factura facturarPedido(Long pedidoId) throws Exception {
-        // 1. Obtener pedido
+
         Pedido pedido = pedidoDao.buscarPorId(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado con ID " + pedidoId));
-        // 2. Verificar estado
+
         if (!pedido.getEstado().equals(EstadoPedido.CREADO)) {
             throw new IllegalStateException("El pedido no está en estado CREADO, no se puede facturar");
         }
-        // 3. Obtener usuario
+
         Usuario usuario = servicioUsuario.buscarUsuarioPorId(pedido.getUsuarioId());
-        // 4. Construir Factura
+
         Factura factura = new Factura();
         factura.setPedidoId(pedidoId);
         factura.setUsuarioId(pedido.getUsuarioId());
         factura.setFechaEmision(LocalDateTime.now());
         factura.setEstado(EstadoFactura.PENDIENTE_PAGO);
-        // 5. Calcular importes usando pedido
+
         BigDecimal bruto = pedido.getImporteBruto();
         BigDecimal desc = pedido.getDescuentoTotal();
         BigDecimal iva = pedido.getImpuestoTotal();
@@ -58,11 +55,11 @@ public class ServicioFactura {
         factura.setDescuentoTotal(desc);
         factura.setImpuestoTotal(iva);
         factura.setImporteTotal(total);
-        // 6. Persistir factura
+
         Factura guardada = facturaDao.guardar(factura);
-        // 7. Actualizar estado del pedido a FACTURADO
+
         servicioPedido.actualizarEstadoPedido(pedidoId, EstadoPedido.FACTURADO);
-        // 8. Mostrar detalle
+
         imprimirDetalleFactura(guardada, usuario, pedido);
         return guardada;
     }
@@ -91,10 +88,5 @@ public class ServicioFactura {
     public List<Factura> listarFacturasPorUsuario(Long usuarioId) throws Exception {
         return facturaDao.listarPorUsuario(usuarioId);
     }
-    /**
-     * Cambia el estado de una factura (por ejemplo a PAGADA o CANCELADA).
-     */
-    public void actualizarEstadoFactura(Long facturaId, EstadoFactura nuevoEstado) throws Exception {
-        facturaDao.actualizarEstado(facturaId, nuevoEstado.name());
-    }
+
 }

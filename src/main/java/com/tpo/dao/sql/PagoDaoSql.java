@@ -37,7 +37,7 @@ public class PagoDaoSql implements PagoDao {
                         throw new SQLException("No se obtuvo ID al insertar Pago");
                     }
                 }
-                // Insertar en Factura_Pago
+
                 try (PreparedStatement psFP = conn.prepareStatement(sqlInsertFacturaPago)) {
                     for (Long facturaId : pago.getFacturaIds()) {
                         psFP.setLong(1, pago.getId());
@@ -75,7 +75,7 @@ public class PagoDaoSql implements PagoDao {
                 pago.setFechaPago(rs.getTimestamp("fecha_pago").toLocalDateTime());
                 pago.setMedioPago(com.tpo.modelo.pago.MedioPago.valueOf(rs.getString("medio_pago")));
                 pago.setOperador(rs.getString("operador"));
-                // Recuperar facturas asociadas
+
                 try (PreparedStatement psF = conn.prepareStatement(sqlFacturas)) {
                     psF.setLong(1, pagoId);
                     try (ResultSet rsFP = psF.executeQuery()) {

@@ -40,7 +40,7 @@ public class ProductoDaoMongo implements ProductoDao {
         }
         ObjectId oid = new ObjectId(producto.getId());
         Document doc = toDocument(producto);
-        // Asegurarse de no sobrescribir _id
+
         doc.remove("_id");
         coleccion.replaceOne(Filters.eq("_id", oid), doc);
     }
@@ -86,13 +86,13 @@ public class ProductoDaoMongo implements ProductoDao {
         }
         doc.put("nombre", p.getNombre());
         doc.put("descripcion", p.getDescripcion());
-        // BigDecimal no mapea directo: convertir a String o Double. Mejor String para exactitud.
+
         doc.put("precio", p.getPrecio().toString());
         doc.put("urlsFotos", p.getUrlsFotos());
         doc.put("urlsVideos", p.getUrlsVideos());
         doc.put("comentarios", p.getComentarios());
         doc.put("etiquetas", p.getEtiquetas());
-        // Fechas: LocalDateTime → String o Date. MongoDocument Date toma java.util.Date:
+
         if (p.getFechaCreacion() != null) {
             doc.put("fechaCreacion", java.util.Date.from(p.getFechaCreacion().atZone(java.time.ZoneId.systemDefault()).toInstant()));
         }
@@ -109,14 +109,14 @@ public class ProductoDaoMongo implements ProductoDao {
         p.setId(oid.toHexString());
         p.setNombre(doc.getString("nombre"));
         p.setDescripcion(doc.getString("descripcion"));
-        // precio: recuperado como String o Double. Si guardamos como String, parsear:
+
         String precioStr = doc.getString("precio");
         if (precioStr != null) {
             p.setPrecio(new BigDecimal(precioStr));
         } else if (doc.get("precio") instanceof Number) {
             p.setPrecio(new BigDecimal(((Number) doc.get("precio")).toString()));
         }
-        // listas
+
         List<String> fotos = doc.getList("urlsFotos", String.class);
         p.setUrlsFotos(fotos);
         List<String> videos = doc.getList("urlsVideos", String.class);
@@ -125,7 +125,7 @@ public class ProductoDaoMongo implements ProductoDao {
         p.setComentarios(comentarios);
         List<String> etiquetas = doc.getList("etiquetas", String.class);
         p.setEtiquetas(etiquetas);
-        // fechas
+
         java.util.Date fechaC = doc.getDate("fechaCreacion");
         if (fechaC != null) {
             p.setFechaCreacion(LocalDateTime.ofInstant(fechaC.toInstant(), java.time.ZoneId.systemDefault()));

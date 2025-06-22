@@ -9,6 +9,4 @@ public interface FacturaDao {
     void actualizarEstado(Long facturaId, String nuevoEstado) throws Exception;
     Optional<Factura> buscarPorId(Long facturaId) throws Exception;
     List<Factura> listarPorUsuario(Long usuarioId) throws Exception;
-    List<Factura> listarPendientesPorUsuario(Long usuarioId) throws Exception;
-    List<Factura> listarTodas() throws Exception;
 }

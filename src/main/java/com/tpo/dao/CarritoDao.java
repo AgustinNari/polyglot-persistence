@@ -11,7 +11,7 @@ public interface CarritoDao {
     void eliminarLinea(String usuarioId, String productoId) throws Exception;
     List<LineaCarrito> obtenerLineas(String usuarioId) throws Exception;
     void limpiarCarrito(String usuarioId) throws Exception;
-    // Métodos para historial de undo/redo:
+
     void registrarAccion(String usuarioId, String accion, LineaCarrito linea) throws Exception;
     boolean puedeDeshacer(String usuarioId) throws Exception;
     void deshacer(String usuarioId) throws Exception;

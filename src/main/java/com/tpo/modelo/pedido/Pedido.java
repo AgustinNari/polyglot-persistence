@@ -13,13 +13,13 @@ public class Pedido {
     private Long usuarioId;
     private List<LineaPedido> lineas = new ArrayList<>();
     private LocalDateTime fechaCreacion;
-    private EstadoPedido estado; // enum, por ejemplo: CREADO, FACTURADO, CANCELADO
+    private EstadoPedido estado;
 
-    // Desglose de importes:
-    private BigDecimal importeBruto;    // suma de subtotales de líneas
+
+    private BigDecimal importeBruto;
     private BigDecimal descuentoTotal;
     private BigDecimal impuestoTotal;
-    private BigDecimal importeTotal;    // importeBruto - descuentoTotal + impuestoTotal
+    private BigDecimal importeTotal;
 
 
     public Pedido() {}
@@ -55,26 +55,26 @@ public class Pedido {
         if (lp == null) {
             throw new IllegalArgumentException("La línea de pedido no puede ser nula");
         }
-        // Recalcular subtotal final de la línea por si no se hizo:
-        lp.recalcularSubtotal(); // subtotalFinal = precio*cant - desc + iva
 
-        // Base de la línea (precio * cantidad), sin descuento ni IVA:
+        lp.recalcularSubtotal();
+
+
         BigDecimal baseLinea = lp.getPrecioUnitario().multiply(BigDecimal.valueOf(lp.getCantidad()));
 
-        // Inicializar campos si es null:
+
         if (importeBruto == null) importeBruto = BigDecimal.ZERO;
         if (descuentoTotal == null) descuentoTotal = BigDecimal.ZERO;
         if (impuestoTotal == null) impuestoTotal = BigDecimal.ZERO;
         if (importeTotal == null) importeTotal = BigDecimal.ZERO;
 
-        // Acumular:
+
         importeBruto = importeBruto.add(baseLinea);
         descuentoTotal = descuentoTotal.add(lp.getDescuentoLinea());
         impuestoTotal = impuestoTotal.add(lp.getImpuestoLinea());
-        // Recalcular importeTotal:
+
         importeTotal = importeBruto.subtract(descuentoTotal).add(impuestoTotal);
 
-        // Añadir la línea a la lista:
+
         lineas.add(lp);
     }
 

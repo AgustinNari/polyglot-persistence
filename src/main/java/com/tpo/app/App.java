@@ -16,11 +16,8 @@ import com.tpo.servicio.*;
 import com.tpo.modelo.producto.*;
 import com.tpo.modelo.pedido.*;
 
-
-import javax.swing.text.Document;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -35,7 +32,6 @@ public class App {
     private static ServicioPedido servicioPedido;
     private static ServicioFactura servicioFactura;
     private static ServicioPago servicioPago;
-    private static ServicioReporte servicioReporte;
     private static PedidoDaoSql pedidoDaoSql = new PedidoDaoSql();
     private static FacturaDaoSql facturaDaoSql = new FacturaDaoSql();
     private static PagoDaoSql pagoDaoSql = new PagoDaoSql();
@@ -74,7 +70,6 @@ public class App {
         servicioPedido = new ServicioPedido(pedidoDaoSql, servicioCarrito, productoDaoMongo, servicioUsuario);
         servicioFactura = new ServicioFactura(facturaDaoSql, pedidoDaoSql, servicioUsuario, servicioPedido);
         servicioPago = new ServicioPago(pagoDaoSql, facturaDaoSql);
-        servicioReporte = new ServicioReporte(sesionUsuarioDaoCassandra);
     }
 
     private static void mostrarMenuPrincipal() throws Exception {
@@ -180,20 +175,16 @@ public class App {
                     case "23": logout(); break;
                     case "0":
                         if (usuarioLogueado != null) {
-                            // Informar al usuario
                             System.out.println("Saliendo de la aplicación: realizando logout automático...");
                             try {
-                                // Llamar a logout con la fecha de login almacenada
                                 servicioUsuario.logout(usuarioLogueado, fechaLoginActual);
                                 System.out.println("Logout automático completado. Tiempo de sesión acumulado.");
                             } catch (Exception e) {
                                 System.out.println("Error al realizar logout automático: " + e.getMessage());
-                                // Opcional: loguear stacktrace en logger
                             }
                         } else {
                             System.out.println("Saliendo de la aplicación...");
                         }
-                        // Finalmente, terminar
                         System.exit(0);
                         return;
                     default: System.out.println("Opción inválida"); break;
@@ -236,7 +227,6 @@ public class App {
             u.setEmail(email);
             u.setContrasena(pass);
             u.setCondicionIVA(condIva);
-            // Rol se asigna en el servicio
             Usuario creado = servicioUsuario.registrarUsuario(u);
             System.out.println("Usuario registrado con ID: " + creado.getId() + ", Rol: " + creado.getRol());
         } catch (IllegalArgumentException iae) {
@@ -279,7 +269,7 @@ public class App {
         try {
             System.out.println("=== Agregar nuevo producto ===");
             Producto p = new Producto();
-            // Pedir datos básicos:
+
             System.out.print("Nombre: ");
             String nombre = scanner.nextLine().trim();
             p.setNombre(nombre);
@@ -297,7 +287,6 @@ public class App {
                 return;
             }
 
-            // Fotos: pedir URLs separadas por comas o dejar vacío
             System.out.print("URLs de fotos (separadas por coma) o Enter para omitir: ");
             String fotosLine = scanner.nextLine().trim();
             if (!fotosLine.isBlank()) {
@@ -309,7 +298,6 @@ public class App {
                 p.setUrlsFotos(fotos);
             }
 
-            // Videos
             System.out.print("URLs de videos (separadas por coma) o Enter para omitir: ");
             String videosLine = scanner.nextLine().trim();
             if (!videosLine.isBlank()) {
@@ -321,10 +309,8 @@ public class App {
                 p.setUrlsVideos(videos);
             }
 
-            // Comentarios iniciales opcional
-            p.setComentarios(new java.util.ArrayList<>()); // vacío o podrías pedir
+            p.setComentarios(new java.util.ArrayList<>());
 
-            // Etiquetas
             System.out.print("Etiquetas (separadas por coma) o Enter para omitir: ");
             String tagsLine = scanner.nextLine().trim();
             if (!tagsLine.isBlank()) {
@@ -336,7 +322,7 @@ public class App {
                 p.setEtiquetas(tags);
             }
 
-            // Llamar servicio: operador = ID de usuario logueado
+
             String operador = String.valueOf(usuarioLogueado.getId());
             Producto creado = servicioProducto.crearProducto(p, operador);
             System.out.println("Producto creado con ID: " + creado.getId());
@@ -353,7 +339,6 @@ public class App {
             if (lista.isEmpty()) {
                 System.out.println("No hay productos en el catálogo.");
             } else {
-                // Formato: ID, Nombre, Precio, FechaActualizacion
                 System.out.printf("%-24s %-20s %-10s %-20s%n", "ID", "Nombre", "Precio", "Última actualización");
                 for (Producto p : lista) {
                     String fechaAct = p.getFechaActualizacion() != null ? p.getFechaActualizacion().toString() : "-";
@@ -485,7 +470,6 @@ public class App {
             Long pedidoId = Long.parseLong(scanner.nextLine());
             Factura factura = servicioFactura.facturarPedido(pedidoId);
             if (factura != null) {
-                // ya imprimió detalle en el método crearFacturaDesdePedido
                 System.out.println("Factura creada con ID: " + factura.getId());
             }
         } catch (Exception e) {
@@ -527,7 +511,7 @@ public class App {
     private static void opcionListarMisPedidos() {
         try {
             Long usuarioId = usuarioLogueado.getId();
-            // Lista de pedidos que devuelve solo metadatos (sin líneas ni totales)
+
             List<Pedido> lista = servicioPedido.listarPedidosPorUsuario(String.valueOf(usuarioId));
             if (lista.isEmpty()) {
                 System.out.println("No tiene pedidos.");
@@ -535,13 +519,12 @@ public class App {
                 System.out.println("=== Mis Pedidos ===");
                 System.out.printf("%-5s %-20s %-12s %-12s%n", "ID", "FechaCreación", "Estado", "ImporteTotal");
                 for (Pedido p : lista) {
-                    // Recuperar pedido completo con líneas
+
                     Pedido pedidoCompleto = cargarPedidoCompleto(p.getId());
-                    // Recalcular totales en caso de que no se hayan calculado al cargar
-                    // Asumo que Pedido tiene método para recalcular totales basado en las líneas:
-                    // si tu clase Pedido recalcula en setLineas o en getters, basta con setLineas:
+
+
                     pedidoCompleto.setLineas(pedidoCompleto.getLineas());
-                    // Ahora importeTotal está correcto:
+
                     String fecha = pedidoCompleto.getFechaCreacion() != null
                             ? pedidoCompleto.getFechaCreacion().toString()
                             : "N/D";
@@ -552,7 +535,7 @@ public class App {
                     System.out.printf("%-5d %-20s %-12s %12.2f%n",
                             pedidoCompleto.getId(), fecha, estado, importe);
                 }
-                // Permitir ver detalle de un pedido:
+
                 System.out.print("¿Ver detalle de algún pedido? Ingrese ID o Enter para omitir: ");
                 String line = scanner.nextLine();
                 if (!line.isBlank()) {
@@ -572,21 +555,17 @@ public class App {
         }
     }
 
-    /**
-     * Recupera un Pedido con sus líneas desde la base de datos.
-     * Ajusta según tus DAOs/servicios: puede usar servicioPedido o pedidoDaoSql + OrderItemsDao.
-     */
     private static Pedido cargarPedidoCompleto(Long pedidoId) {
         try {
-            // Ejemplo usando DAO SQL:
+
             Optional<Pedido> opt = ((PedidoDaoSql) pedidoDaoSql).buscarPorId(pedidoId);
             if (opt.isEmpty()) {
                 return null;
             }
             Pedido p = opt.get();
-            // Ahora cargar líneas: asumo que pedidoDaoSql tiene método buscarLineasPorPedido
+
             List<LineaPedido> lineas = p.getLineas();
-            p.setLineas(lineas); // esto recalcula los totales internamente
+            p.setLineas(lineas);
             return p;
         } catch (Exception e) {
             System.out.println("Error cargando pedido completo ID=" + pedidoId + ": " + e.getMessage());
@@ -677,7 +656,7 @@ public class App {
             System.out.println("URLs Fotos: " + existente.getUrlsFotos());
             System.out.println("URLs Videos: " + existente.getUrlsVideos());
             System.out.println("Etiquetas: " + existente.getEtiquetas());
-            // Pedir nuevos valores; si la línea está en blanco, mantener valor actual.
+
             System.out.print("Nuevo nombre (Enter para dejar '" + existente.getNombre() + "'): ");
             String nombre = scanner.nextLine().trim();
             if (!nombre.isBlank()) {
@@ -697,7 +676,7 @@ public class App {
                     System.out.println("Precio inválido. Se mantiene el anterior.");
                 }
             }
-            // Fotos
+
             System.out.print("URLs Fotos (separadas por coma) o Enter para dejar actuales: ");
             String fotosLine = scanner.nextLine().trim();
             if (!fotosLine.isBlank()) {
@@ -708,7 +687,7 @@ public class App {
                 }
                 existente.setUrlsFotos(fotos);
             }
-            // Videos
+
             System.out.print("URLs Videos (separadas por coma) o Enter para dejar actuales: ");
             String videosLine = scanner.nextLine().trim();
             if (!videosLine.isBlank()) {
@@ -719,7 +698,7 @@ public class App {
                 }
                 existente.setUrlsVideos(videos);
             }
-            // Etiquetas
+
             System.out.print("Etiquetas (separadas por coma) o Enter para dejar actuales: ");
             String tagsLine = scanner.nextLine().trim();
             if (!tagsLine.isBlank()) {
@@ -730,8 +709,7 @@ public class App {
                 }
                 existente.setEtiquetas(tags);
             }
-            // Se asume comentarios no se actualizan manualmente aquí, o puede implementarse similar.
-            // Llamar servicio
+
             String operador = String.valueOf(usuarioLogueado.getId());
             servicioProducto.actualizarProducto(existente, operador);
             System.out.println("Producto actualizado correctamente.");
@@ -789,7 +767,7 @@ public class App {
             System.out.println("Error: " + iae.getMessage());
         } catch (Exception e) {
             System.out.println("Error al obtener historial de cambios: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            // e.printStackTrace(); // opcional en desarrollo
+
         }
     }
 
@@ -805,7 +783,7 @@ public class App {
                     System.out.printf("%-24s %-10s %-20s %-10s%n",
                             fecha, r.getTipoOperacion(), r.getProductoId(), r.getOperador());
                 }
-                // Si se desea ver detalle de un registro en particular, habría que mostrar más info
+
             }
         } catch (Exception e) {
             System.out.println("Error al ver historial completo de catálogo: " + e.getMessage());
@@ -820,7 +798,7 @@ public class App {
             System.out.println("Dirección: " + usuarioLogueado.getDireccion());
             System.out.println("DocIdentidad: " + usuarioLogueado.getDocIdentidad());
 
-            // Obtener lista de sesiones
+
             List<SesionUsuario> sesiones = servicioUsuario.listarTodasSesiones(usuarioLogueado);
             if (sesiones.isEmpty()) {
                 System.out.println("No hay registros de sesión para este usuario.");
@@ -865,15 +843,14 @@ public class App {
                 System.out.println("ID de pedido inválido.");
                 return;
             }
-            // Opcional: verificar que el pedido pertenece al usuario logueado
-            // Si tu DAO o servicio permite listarPorUsuario, verifica:
+
             List<Pedido> misPedidos = servicioPedido.listarPedidosPorUsuario(String.valueOf(usuarioLogueado.getId()));
             boolean esMio = misPedidos.stream().anyMatch(p -> p.getId().equals(pedidoId));
             if (!esMio) {
                 System.out.println("No existe un pedido con ese ID para este usuario.");
                 return;
             }
-            // Intentar cancelar
+
             servicioPedido.cancelarPedido(pedidoId);
         } catch (IllegalArgumentException iae) {
             System.out.println("Error: " + iae.getMessage());

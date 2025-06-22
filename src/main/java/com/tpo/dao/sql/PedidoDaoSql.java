@@ -22,7 +22,7 @@ public class PedidoDaoSql implements PedidoDao {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setLong(1, pedido.getUsuarioId());
-                // fecha_creacion: si tu tabla tiene DEFAULT, podrías omitir o setear explícitamente:
+
                 if (pedido.getFechaCreacion() != null) {
                     ps.setTimestamp(2, Timestamp.valueOf(pedido.getFechaCreacion()));
                 } else {
@@ -46,7 +46,7 @@ public class PedidoDaoSql implements PedidoDao {
                     }
                 }
             }
-            // Insertar líneas
+
             String sqlInsertLinea = "INSERT INTO dbo.LineaPedido (pedido_id, producto_id, cantidad, precio_unitario, descuento, impuesto, subtotal) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement psLinea = conn.prepareStatement(sqlInsertLinea, Statement.RETURN_GENERATED_KEYS)) {
@@ -103,7 +103,7 @@ public class PedidoDaoSql implements PedidoDao {
                 pedido.setDescuentoTotal(rs.getBigDecimal("descuento_total"));
                 pedido.setImpuestoTotal(rs.getBigDecimal("impuesto_total"));
                 pedido.setImporteTotal(rs.getBigDecimal("importe_total"));
-                // Obtener líneas
+
                 try (PreparedStatement psL = conn.prepareStatement(sqlLineas)) {
                     psL.setLong(1, id);
                     try (ResultSet rsL = psL.executeQuery()) {
@@ -117,7 +117,7 @@ public class PedidoDaoSql implements PedidoDao {
                             lp.setPrecioUnitario(rsL.getBigDecimal("precio_unitario"));
                             lp.setDescuentoLinea(rsL.getBigDecimal("descuento"));
                             lp.setImpuestoLinea(rsL.getBigDecimal("impuesto"));
-                            lp.setSubtotalFinal(rsL.getBigDecimal("subtotal")); // recalcula subtotal final
+                            lp.setSubtotalFinal(rsL.getBigDecimal("subtotal"));
                             listaLineas.add(lp);
                         }
                         pedido.setLineas(listaLineas);
@@ -142,7 +142,7 @@ public class PedidoDaoSql implements PedidoDao {
         }
     }
 
-    // Método adicional: listar pedidos por usuario
+
     public List<Pedido> listarPorUsuario(Long usuarioId) throws Exception {
         String sql = "SELECT id, usuario_id, fecha_creacion, estado FROM dbo.Pedidos WHERE usuario_id = ?";
         try (Connection conn = SqlServerFactory.getConnection();
@@ -156,7 +156,7 @@ public class PedidoDaoSql implements PedidoDao {
                     p.setUsuarioId(rs.getLong("usuario_id"));
                     p.setFechaCreacion(rs.getTimestamp("fecha_creacion").toLocalDateTime());
                     p.setEstado(EstadoPedido.valueOf(rs.getString("estado")));
-                    // Opcional: cargar líneas si se desea detalle
+
                     lista.add(p);
                 }
                 return lista;

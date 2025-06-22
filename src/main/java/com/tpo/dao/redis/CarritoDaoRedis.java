@@ -23,9 +23,9 @@ public class CarritoDaoRedis implements CarritoDao {
     public void crearCarrito(String usuarioId) throws Exception {
         try (Jedis jedis = RedisFactory.getConnection()) {
             String key = PREFIX_CARRITO + usuarioId;
-            // Inicialmente vacío: asegurarse de que no exista
+
             jedis.del(key);
-            // Limpiar pilas undo/redo
+
             jedis.del(PREFIX_UNDO + usuarioId);
             jedis.del(PREFIX_REDO + usuarioId);
         }
@@ -42,12 +42,12 @@ public class CarritoDaoRedis implements CarritoDao {
     public void agregarLinea(String usuarioId, LineaCarrito linea) throws Exception {
         try (Jedis jedis = RedisFactory.getConnection()) {
             String carritoKey = PREFIX_CARRITO + usuarioId;
-            // Registrar snapshot antes de mutar
+
             registrarSnapshot(jedis, usuarioId);
-            // Serializar LineaCarrito a JSON
+
             String jsonLinea = gson.toJson(linea);
             jedis.hset(carritoKey, linea.getProductoId(), jsonLinea);
-            // Limpiar redo al mutar
+
             jedis.del(PREFIX_REDO + usuarioId);
         }
     }
@@ -56,7 +56,7 @@ public class CarritoDaoRedis implements CarritoDao {
     public void actualizarLinea(String usuarioId, LineaCarrito linea) throws Exception {
         try (Jedis jedis = RedisFactory.getConnection()) {
             String carritoKey = PREFIX_CARRITO + usuarioId;
-            // Registrar snapshot antes de mutar
+
             registrarSnapshot(jedis, usuarioId);
             String jsonLinea = gson.toJson(linea);
             jedis.hset(carritoKey, linea.getProductoId(), jsonLinea);
@@ -101,13 +101,12 @@ public class CarritoDaoRedis implements CarritoDao {
 
     @Override
     public void registrarAccion(String usuarioId, String accion, LineaCarrito linea) throws Exception {
-        // Este método puede usarse para guardar un log textual de la acción:
-        // Puede almacenarse en lista: "accion:AGREGAR linea:{...}"
+
         try (Jedis jedis = RedisFactory.getConnection()) {
             String keyAcciones = "carrito:acciones:" + usuarioId;
             String entry = accion + ":" + gson.toJson(linea);
             jedis.lpush(keyAcciones, entry);
-            // Podrías limitar tamaño de la lista: jedis.ltrim(keyAcciones, 0, 99) para max 100 registros.
+
         }
     }
 
@@ -125,22 +124,22 @@ public class CarritoDaoRedis implements CarritoDao {
             String undoKey = PREFIX_UNDO + usuarioId;
             String redoKey = PREFIX_REDO + usuarioId;
             String carritoKey = PREFIX_CARRITO + usuarioId;
-            // Obtener estado actual antes de deshacer
+
             List<LineaCarrito> estadoActual = obtenerLineas(usuarioId);
             String estadoActualJson = gson.toJson(estadoActual);
-            // Pop último snapshot para restaurar
+
             String snapJson = jedis.lpop(undoKey);
             if (snapJson == null) {
                 throw new IllegalStateException("No hay nada para deshacer");
             }
-            // Guardar estado actual en redo stack
+
             jedis.lpush(redoKey, estadoActualJson);
-            // Restaurar snapshot: parsear lista de LineaCarrito
+
             Type tipoLista = new TypeToken<List<LineaCarrito>>(){}.getType();
             List<LineaCarrito> snapshot = gson.fromJson(snapJson, tipoLista);
-            // Limpiar carrito actual
+
             jedis.del(carritoKey);
-            // Restaurar cada línea
+
             for (LineaCarrito linea : snapshot) {
                 jedis.hset(carritoKey, linea.getProductoId(), gson.toJson(linea));
             }
@@ -161,33 +160,33 @@ public class CarritoDaoRedis implements CarritoDao {
             String undoKey = PREFIX_UNDO + usuarioId;
             String redoKey = PREFIX_REDO + usuarioId;
             String carritoKey = PREFIX_CARRITO + usuarioId;
-            // Obtener estado actual antes de rehacer
+
             List<LineaCarrito> estadoActual = obtenerLineas(usuarioId);
             String estadoActualJson = gson.toJson(estadoActual);
-            // Pop último redo snapshot
+
             String snapJson = jedis.lpop(redoKey);
             if (snapJson == null) {
                 throw new IllegalStateException("No hay nada para rehacer");
             }
-            // Guardar estado actual en undo stack
+
             jedis.lpush(undoKey, estadoActualJson);
-            // Restaurar snapshot de redo
+
             Type tipoLista = new TypeToken<List<LineaCarrito>>(){}.getType();
             List<LineaCarrito> snapshot = gson.fromJson(snapJson, tipoLista);
-            // Limpiar carrito actual
+
             jedis.del(carritoKey);
-            // Restaurar cada línea
+
             for (LineaCarrito linea : snapshot) {
                 jedis.hset(carritoKey, linea.getProductoId(), gson.toJson(linea));
             }
         }
     }
 
-    // Método auxiliar: antes de mutar, guardar snapshot de estado actual en undo stack
+
     private void registrarSnapshot(Jedis jedis, String usuarioId) throws Exception {
         String carritoKey = PREFIX_CARRITO + usuarioId;
         String undoKey = PREFIX_UNDO + usuarioId;
-        // Obtener estado actual
+
         Map<String, String> all = jedis.hgetAll(carritoKey);
         List<LineaCarrito> estadoActual = new ArrayList<>();
         Type tipo = new TypeToken<LineaCarrito>(){}.getType();
@@ -195,8 +194,8 @@ public class CarritoDaoRedis implements CarritoDao {
             estadoActual.add(gson.fromJson(json, tipo));
         }
         String estadoJson = gson.toJson(estadoActual);
-        // Push en undo stack
+
         jedis.lpush(undoKey, estadoJson);
-        // Opcionalmente limitar tamaño de undo stack: jedis.ltrim(undoKey, 0, 49) para max 50 snapshots.
+
     }
 }

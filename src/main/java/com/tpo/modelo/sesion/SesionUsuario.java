@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class SesionUsuario {
-    private Long id; // si en Cassandra no usas id, puedes omitirlo en POJO
     private String usuarioId;
     private LocalDateTime fechaLogin;
     private LocalDateTime fechaLogout;

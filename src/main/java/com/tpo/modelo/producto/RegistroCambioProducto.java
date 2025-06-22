@@ -5,13 +5,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public class RegistroCambioProducto {
-    private String id; // ObjectId en Mongo
+    private String id;
     private String productoId;
     private LocalDateTime fechaCambio;
-    private String operador; // quien hizo el cambio
-    private Map<String, Object> valorAnterior; // campos previos
-    private Map<String, Object> valorNuevo;    // campos nuevos
-    private String tipoOperacion; // "CREAR", "MODIFICAR", "ELIMINAR"
+    private String operador;
+    private Map<String, Object> valorAnterior;
+    private Map<String, Object> valorNuevo;
+    private String tipoOperacion;
 
     public RegistroCambioProducto() {}
 
@@ -26,8 +26,7 @@ public class RegistroCambioProducto {
         this.tipoOperacion = tipoOperacion;
     }
 
-    // Getters y setters...
-    // equals/hashCode basados en id si existe, o en productoId+fechaCambio
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -8,12 +8,12 @@ public class Factura {
     private Long id;
     private Long pedidoId;
     private Long usuarioId;
-    private BigDecimal importeBruto; // suma de líneas sin descuento ni impuestos
+    private BigDecimal importeBruto;
     private BigDecimal descuentoTotal;
     private BigDecimal impuestoTotal;
-    private BigDecimal importeTotal; // importeBruto - descuentoTotal + impuestoTotal
+    private BigDecimal importeTotal;
     private LocalDateTime fechaEmision;
-    private EstadoFactura estado; // PENDIENTE_PAGO, PARCIALMENTE_PAGADA, PAGADA
+    private EstadoFactura estado;
 
     public Factura() {}
 
@@ -29,7 +29,7 @@ public class Factura {
         this.estado = EstadoFactura.PENDIENTE_PAGO;
     }
 
-    // Getters y setters...
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

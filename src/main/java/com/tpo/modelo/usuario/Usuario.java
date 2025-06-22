@@ -1,6 +1,5 @@
 package com.tpo.modelo.usuario;
 
-import com.tpo.modelo.usuario.RolUsuario;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -15,16 +14,15 @@ public class Usuario {
     private String contrasena;
     private RolUsuario rol;
     private LocalDateTime fechaCreacion;
-    private long totalMinutosActividad;  // acumulado
+    private long totalMinutosActividad;
 
-    // (Opcional) condición ante IVA
+
     private CondicionIVA condicionIVA;
 
     public Usuario() {
-        // Por defecto rol será asignado en el servicio
     }
 
-    // Constructor para crear: sin id, pero con rol asignado en servicio
+
     public Usuario(String nombre, String apellido, String direccion,
                    String docIdentidad, String email, String contrasena, RolUsuario rol) {
         setNombre(nombre);
@@ -34,12 +32,12 @@ public class Usuario {
         setEmail(email);
         setContrasena(contrasena);
         setRol(rol);
-        this.fechaCreacion = LocalDateTime.now(); // fecha de creación por defecto
-        // condición IVA por defecto si se desea
+        this.fechaCreacion = LocalDateTime.now();
+
         this.condicionIVA = null;
     }
 
-    // Getters y setters con validaciones ligeras
+
     public Long getId() {
         return id;
     }
@@ -89,7 +87,6 @@ public class Usuario {
         if (docIdentidad == null || docIdentidad.isBlank()) {
             throw new IllegalArgumentException("Documento de identidad no puede ser vacío");
         }
-        // Podrías agregar validación de patrón: e.g. sólo dígitos o con guiones
         this.docIdentidad = docIdentidad.trim();
     }
 

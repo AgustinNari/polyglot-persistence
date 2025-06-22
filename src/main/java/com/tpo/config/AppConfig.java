@@ -15,8 +15,7 @@ public class AppConfig {
             e.printStackTrace();
             throw new ExceptionInInitializerError("No se pudo cargar application.properties: " + e.getMessage());
         }
-        // Si existe application-local.properties en classpath o en filesystem, puedes cargar aquí también:
-        // try (InputStream isLocal = ...) { props.load(isLocal); } catch(...) {}
+
     }
 
     public static String get(String key) {

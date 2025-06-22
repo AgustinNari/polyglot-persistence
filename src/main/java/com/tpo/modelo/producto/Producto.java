@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Producto {
-    private String id; // ObjectId en Mongo, representado como String
+    private String id;
     private String nombre;
     private String descripcion;
     private BigDecimal precio;
@@ -28,7 +28,7 @@ public class Producto {
         this.fechaActualizacion = LocalDateTime.now();
     }
 
-    // Getters y setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -94,7 +94,7 @@ public class Producto {
         if (id != null && producto.id != null) {
             return Objects.equals(id, producto.id);
         }
-        return Objects.equals(nombre, producto.nombre); // fallback
+        return Objects.equals(nombre, producto.nombre);
     }
 
     @Override

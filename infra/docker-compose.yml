@@ -10,7 +10,7 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
-    # NO confíes en init automáticos de SQL Server; inicializaremos más abajo manualmente.
+
 
   mongodb:
     image: mongo:6
@@ -20,9 +20,9 @@ services:
     command: ["--replSet", "rs0"]
     volumes:
       - mongodb_data:/data/db
-    # No montamos init aquí porque iniciaremos réplica y colecciones manualmente.
 
-  # Servicio que espera y ejecuta rs.initiate() para Mongo
+
+
   mongo-init:
     image: mongo:6
     depends_on:
@@ -34,14 +34,14 @@ services:
         echo "Esperando Mongo para iniciar réplica..."
         sleep 5
         mongosh --host mongodb:27017 --eval "rs.initiate()"
-    # No expone puertos; solo arranca tras mongodb.
+
 
   redis:
     image: redis:7
     container_name: tpo_redis
     ports:
       - "6379:6379"
-    # No scripts de init necesarios para Redis.
+
 
   cassandra:
     image: cassandra:4
@@ -50,7 +50,7 @@ services:
       - "9042:9042"
     volumes:
       - cassandra_data:/var/lib/cassandra
-    # Inicializaremos Cassandra manualmente con cqlsh.
+
 
 
   sqlserver-init:

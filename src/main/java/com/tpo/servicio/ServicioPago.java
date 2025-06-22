@@ -22,13 +22,9 @@ public class ServicioPago {
         this.facturaDao = facturaDao;
     }
 
-    /**
-     * Registra un pago para una o varias facturas completas.
-     * Monto total debe ser >= suma de importes totales de facturas.
-     * Actualiza estado de cada factura a PAGADA.
-     */
+
     public Pago registrarPago(String usuarioId, List<Long> facturaIds, BigDecimal montoTotal, MedioPago medioPago, String operador) throws Exception {
-        // Verificar facturas
+
         BigDecimal sumaFacturas = BigDecimal.ZERO;
         for (Long fid : facturaIds) {
             Optional<Factura> optF = facturaDao.buscarPorId(fid);
@@ -44,7 +40,7 @@ public class ServicioPago {
         if (montoTotal.compareTo(sumaFacturas) < 0) {
             throw new IllegalArgumentException("Monto total de pago es menor que la suma de facturas: " + sumaFacturas);
         }
-        // Crear Pago
+
         Pago pago = new Pago();
         pago.setUsuarioId(Long.valueOf(usuarioId));
         pago.setFacturaIds(facturaIds);
@@ -53,7 +49,7 @@ public class ServicioPago {
         pago.setOperador(operador);
         pago.setFechaPago(LocalDateTime.now());
         Pago guardado = pagoDao.guardar(pago);
-        // Actualizar estado de facturas a PAGADA
+
         for (Long fid : facturaIds) {
             facturaDao.actualizarEstado(fid, EstadoFactura.PAGADA.name());
         }

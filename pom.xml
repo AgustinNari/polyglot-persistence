@@ -44,7 +44,7 @@
             <artifactId>java-driver-core</artifactId>
             <version>4.19.0</version>
         </dependency>
-        <!-- JUnit para tests -->
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

@@ -11,8 +11,8 @@ public class Pago {
     private BigDecimal montoTotal;
     private LocalDateTime fechaPago;
     private MedioPago medioPago;
-    private String operador; // puede ser null si no hay operador
-    // La relación con facturas se maneja en SQL con tabla intermedia, o aquí como lista:
+    private String operador;
+
     private List<Long> facturaIds;
 
     public Pago() {}

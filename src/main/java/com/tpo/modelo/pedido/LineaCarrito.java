@@ -7,7 +7,7 @@ public class LineaCarrito {
     private String productoId;
     private int cantidad;
     private BigDecimal precioUnitario;
-    // Nuevo campo para almacenar subtotal
+
     private BigDecimal subtotal;
 
     public LineaCarrito() {}
@@ -43,10 +43,7 @@ public class LineaCarrito {
         this.precioUnitario = precioUnitario;
     }
 
-    /**
-     * Retorna el subtotal: precioUnitario * cantidad.
-     * Si el campo subtotal es null, lo recalcula.
-     */
+
     public BigDecimal getSubtotal() {
         if (subtotal == null && precioUnitario != null) {
             return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
@@ -54,10 +51,7 @@ public class LineaCarrito {
         return subtotal;
     }
 
-    /**
-     * Recalcula y actualiza el campo subtotal en base a precioUnitario y cantidad.
-     * Debe invocarse después de cambiar cantidad o precioUnitario.
-     */
+
     public void recalcularSubtotal() {
         if (precioUnitario == null) {
             throw new IllegalStateException("No se puede recalcular subtotal sin precioUnitario");

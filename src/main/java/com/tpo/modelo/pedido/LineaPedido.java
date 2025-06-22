@@ -4,14 +4,14 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public class LineaPedido {
-    private Long id; // opcional si guardas en SQL con tabla OrderItems
-    private Long pedidoId; // cuando persistas en SQL
+    private Long id;
+    private Long pedidoId;
     private String productoId;
     private int cantidad;
     private BigDecimal precioUnitario;
-    private BigDecimal descuentoLinea; // valor absoluto o porcentaje convertido a valor
+    private BigDecimal descuentoLinea;
     private BigDecimal impuestoLinea;
-    private BigDecimal subtotalFinal; // calculado: (precioUnitario * cantidad) - descuentoLinea + impuestoLinea
+    private BigDecimal subtotalFinal;
 
     public LineaPedido() {}
 

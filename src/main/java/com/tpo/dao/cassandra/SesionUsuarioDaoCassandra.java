@@ -22,7 +22,7 @@ public class SesionUsuarioDaoCassandra implements SesionUsuarioDao {
         LocalDateTime fechaLogin = log.getFechaLogin();
         LocalDate logDate = fechaLogin.toLocalDate();
         Instant loginInstant = fechaLogin.atZone(ZoneId.systemDefault()).toInstant();
-        // INSERT con Instant; el driver mapea Instant -> timestamp de Cassandra
+
         SimpleStatement stmt = SimpleStatement.builder(
                         "INSERT INTO user_logs (user_id, log_date, login_time, logout_time) VALUES (?, ?, ?, ?)")
                 .addPositionalValues(log.getUsuarioId(), logDate, loginInstant, null)
@@ -63,35 +63,7 @@ public class SesionUsuarioDaoCassandra implements SesionUsuarioDao {
         return lista;
     }
 
-    @Override
-    public long sumarMinutosActividadDesde(String userId, LocalDateTime desde) {
-        LocalDate startDate = desde.toLocalDate();
-        LocalDate today = LocalDate.now();
-        long totalMinutos = 0L;
 
-        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
-            SimpleStatement stmt = SimpleStatement.builder(
-                            "SELECT login_time, logout_time FROM user_logs WHERE user_id = ? AND log_date = ?")
-                    .addPositionalValues(userId, date)
-                    .build();
-            ResultSet rs = session.execute(stmt);
-            int filas = 0;
-            for (Row row : rs) {
-                filas++;
-                Instant loginInstant = row.getInstant("login_time");
-                Instant logoutInstant = row.getInstant("logout_time");
-                if (loginInstant != null && logoutInstant != null) {
-                    long diffMin = Duration.between(loginInstant, logoutInstant).toMinutes();
-                    if (diffMin > 0) {
-                        totalMinutos += diffMin;
-                    }
-                }
-            }
-            System.out.println("[DEBUG] Fecha " + date + ": filas encontradas = " + filas);
-        }
-        System.out.println("[DEBUG] TotalMinutos calculado: " + totalMinutos);
-        return totalMinutos;
-    }
 
 
 }

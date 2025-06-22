@@ -22,11 +22,11 @@ public class ServicioProducto {
     }
 
     public Producto crearProducto(Producto p, String operador) throws Exception {
-        // Inicializar fechas
+
         p.setFechaCreacion(LocalDateTime.now());
         p.setFechaActualizacion(LocalDateTime.now());
         Producto guardado = productoDao.guardar(p);
-        // Registrar auditoría: valorAnterior null, valorNuevo con todos los campos
+
         Map<String,Object> valorAnterior = null;
         Map<String,Object> valorNuevo = toMap(guardado);
         RegistroCambioProducto reg = new RegistroCambioProducto(
@@ -42,7 +42,7 @@ public class ServicioProducto {
         }
         Producto antes = antesOpt.get();
         Map<String,Object> valorAnterior = toMap(antes);
-        // Actualizar campos y fecha
+
         p.setFechaCreacion(antes.getFechaCreacion());
         p.setFechaActualizacion(LocalDateTime.now());
         productoDao.actualizar(p);
@@ -78,12 +78,12 @@ public class ServicioProducto {
         if (productoId == null || productoId.isBlank()) {
             throw new IllegalArgumentException("El id de producto no puede ser nulo o vacío");
         }
-        // Opcional: verificar que el producto exista antes de listar historial:
+
         Optional<Producto> opt = productoDao.buscarPorId(productoId);
         if (opt.isEmpty()) {
             throw new IllegalArgumentException("Producto no existe con id: " + productoId);
         }
-        // Pedir listado de registros desde DAO:
+
         return registroDao.listarPorProducto(productoId);
     }
 

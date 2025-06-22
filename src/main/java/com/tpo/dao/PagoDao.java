@@ -9,5 +9,5 @@ public interface PagoDao {
     Optional<Pago> buscarPorId(Long pagoId) throws Exception;
     List<Pago> listarPorUsuario(Long usuarioId) throws Exception;
     List<Pago> listarTodos() throws Exception;
-    // Opcional: actualizar si se permite modificar pagos (normalmente no).
+
 }

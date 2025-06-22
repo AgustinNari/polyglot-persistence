@@ -1,4 +1,3 @@
--- 1. Crear la base de datos TPO si no existe
 
 --DROP DATABASE TPO;
 
@@ -32,7 +31,7 @@ GO
 
 
 
--- Tabla Pedidos
+
 IF OBJECT_ID('dbo.Pedidos','U') IS NULL
 BEGIN
     CREATE TABLE dbo.Pedidos (
@@ -49,7 +48,7 @@ BEGIN
 END
 GO
 
--- Tabla LineaPedido
+
 IF OBJECT_ID('dbo.LineaPedido','U') IS NULL
 BEGIN
     CREATE TABLE dbo.LineaPedido (
@@ -62,8 +61,7 @@ BEGIN
         impuesto DECIMAL(18,2) NULL,
         subtotal DECIMAL(18,2) NOT NULL,
         CONSTRAINT FK_LineaPedido_Pedidos FOREIGN KEY (pedido_id) REFERENCES dbo.Pedidos(id)
-        -- opcionalmente: FK a tabla Productos si existiera en SQL,
-        -- pero en nuestro caso, productos viven en Mongo, así que no hay FK.
+
     );
 END
 GO

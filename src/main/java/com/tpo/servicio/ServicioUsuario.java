@@ -22,7 +22,7 @@ public class ServicioUsuario {
     private final UsuarioDao usuarioDao;
     private final SesionUsuarioDao sesionUsuarioDao;
 
-    // Map para almacenar la sesión activa por usuario
+
     private static Map<String, SesionUsuario> sesionesActivas = new HashMap<>();
 
     public ServicioUsuario(UsuarioDao usuarioDao, SesionUsuarioDao sesionUsuarioDao) {
@@ -30,22 +30,15 @@ public class ServicioUsuario {
         this.sesionUsuarioDao = sesionUsuarioDao;
     }
 
-    // Patrón simple de email; puedes ajustar o usar librería externa si fuera necesario
+
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"
     );
     private static final int MIN_PASSWORD_LENGTH = 6;
 
-    /**
-     * Registra un nuevo usuario con validaciones:
-     * - email en formato válido
-     * - contraseña longitud mínima
-     * - docIdentidad único
-     * - nombre, apellido, dirección no vacíos (el POJO ya valida no vacíos)
-     * - rol: si es el primer usuario en la base, asignar ADMIN, sino CLIENTE
-     */
+
     public Usuario registrarUsuario(Usuario u) throws Exception {
-        // Validaciones:
+
         if (u.getNombre() == null || u.getNombre().isBlank()) {
             throw new IllegalArgumentException("Nombre requerido");
         }
@@ -55,43 +48,41 @@ public class ServicioUsuario {
         if (u.getContrasena() == null || u.getContrasena().length() < 6) {
             throw new IllegalArgumentException("Contraseña debe tener al menos 6 caracteres");
         }
-        // Verificar docIdentidad único:
+
         Optional<Usuario> existente = usuarioDao.buscarPorDocIdentidad(u.getDocIdentidad());
         if (existente.isPresent()) {
             throw new IllegalArgumentException("Ya existe usuario con ese DocIdentidad");
         }
-        // Asignar rol por defecto (si es el primer usuario, podrías asignar ADMIN, sino CLIENTE):
+
         long total = usuarioDao.contarUsuarios();
         if (total == 0) {
             u.setRol(RolUsuario.ADMIN);
         } else {
             u.setRol(RolUsuario.CLIENTE);
         }
-        // Condición IVA ya debe estar seteada antes de llamar aquí.
+
         if (u.getCondicionIVA() == null) {
             throw new IllegalArgumentException("Condición IVA requerida");
         }
-        // Llamar DAO:
+
         Usuario creado = usuarioDao.guardar(u);
         return creado;
     }
-    /**
-     * Login del usuario: verifica credenciales, registra inicio de sesión en Cassandra y devuelve el Usuario.
-     */
+
     public Usuario login(String docIdentidad, String contrasena) throws Exception {
         Optional<Usuario> opt = usuarioDao.buscarPorDocIdentidad(docIdentidad);
         if (opt.isEmpty()) {
             throw new IllegalArgumentException("Usuario no encontrado con docIdentidad: " + docIdentidad);
         }
         Usuario u = opt.get();
-        // En un escenario real: comparar hashed passwords
+
         if (!u.getContrasena().equals(contrasena)) {
             throw new IllegalArgumentException("Contraseña incorrecta");
         }
 
         String userIdStr = String.valueOf(u.getId());
 
-        // Registrar inicio de sesión
+
         SesionUsuario log = new SesionUsuario();
         log.setUsuarioId(userIdStr);
         log.setFechaLogin(LocalDateTime.now());
@@ -112,12 +103,7 @@ public class ServicioUsuario {
         return opt.get();
     }
 
-    /**
-     * Logout: actualiza la última sesión sin logout_time en Cassandra.
-     * Para ello, necesitamos saber la hora de login.
-     * En este ejemplo, suponemos que la aplicación retiene la última hora de login para el usuario.
-     * Podrías pasar como parámetro la fechaLoginTime obtenida en el login.
-     */
+
     public void logout(Usuario u, LocalDateTime fechaLoginTime) throws Exception {
         String userIdStr = String.valueOf(u.getId());
         SesionUsuario log = sesionesActivas.get(userIdStr);
@@ -127,12 +113,12 @@ public class ServicioUsuario {
             sesionUsuarioDao.registrarLogout(userIdStr, fechaLoginDate, fechaLoginTime, fechaLogoutTime);
             sesionesActivas.remove(userIdStr);
 
-            // 1) Calcular duración de esta sesión:
+
             long minutosSesion = Duration.between(fechaLoginTime, fechaLogoutTime).toMinutes();
             if (minutosSesion > 0) {
-                // 2) Incrementar acumulado en SQL:
+
                 usuarioDao.incrementarMinutosActividad(u.getId(), minutosSesion);
-                // 3) Actualizar la propiedad en el objeto Usuario en memoria (opcional):
+
                 long acumuladoAnterior = u.getTotalMinutosActividad();
                 u.setTotalMinutosActividad(acumuladoAnterior + minutosSesion);
             }
@@ -141,11 +127,7 @@ public class ServicioUsuario {
 
 
 
-    /**
-     * Obtiene la categoría promedio del usuario calculando el promedio diario de minutos de actividad
-     * desde su fecha de creación hasta hoy.
-     * @return TOP, MEDIUM o LOW según promedio diario (>=240 TOP; >=120 MEDIUM; <120 LOW)
-     */
+
     public CategoriaUsuario obtenerCategoriaPromedio(Usuario usuario) throws Exception {
         if (usuario.getId() == null) {
             throw new IllegalArgumentException("Usuario sin ID para calcular categoría");
@@ -153,16 +135,16 @@ public class ServicioUsuario {
         if (usuario.getFechaCreacion() == null) {
             throw new IllegalStateException("Usuario sin fechaCreacion");
         }
-        // 1. Leer total de minutos acumulados desde la base SQL (propiedad en objeto Usuario):
+
         long totalMinutos = usuario.getTotalMinutosActividad();
-        // 2. Calcular días transcurridos:
+
         LocalDate fechaInicio = usuario.getFechaCreacion().toLocalDate();
         LocalDate fechaFin = LocalDate.now();
         long diasTranscurridos = java.time.Duration.between(fechaInicio.atStartOfDay(), fechaFin.atStartOfDay()).toDays() + 1;
         if (diasTranscurridos <= 0) {
             diasTranscurridos = 1;
         }
-        // 3. Promedio:
+
         double promedio = (double) totalMinutos / diasTranscurridos;
         System.out.println("Total de minutos acumulados: " + totalMinutos);
         System.out.println("Días transcurridos: " + diasTranscurridos);
