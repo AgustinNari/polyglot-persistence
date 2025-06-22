@@ -527,31 +527,40 @@ public class App {
     private static void opcionListarMisPedidos() {
         try {
             Long usuarioId = usuarioLogueado.getId();
+            // Lista de pedidos que devuelve solo metadatos (sin líneas ni totales)
             List<Pedido> lista = servicioPedido.listarPedidosPorUsuario(String.valueOf(usuarioId));
             if (lista.isEmpty()) {
                 System.out.println("No tiene pedidos.");
             } else {
                 System.out.println("=== Mis Pedidos ===");
-                // Encabezado alineado
                 System.out.printf("%-5s %-20s %-12s %-12s%n", "ID", "FechaCreación", "Estado", "ImporteTotal");
                 for (Pedido p : lista) {
-                    String fecha = p.getFechaCreacion() != null
-                            ? p.getFechaCreacion().toString()
+                    // Recuperar pedido completo con líneas
+                    Pedido pedidoCompleto = cargarPedidoCompleto(p.getId());
+                    // Recalcular totales en caso de que no se hayan calculado al cargar
+                    // Asumo que Pedido tiene método para recalcular totales basado en las líneas:
+                    // si tu clase Pedido recalcula en setLineas o en getters, basta con setLineas:
+                    pedidoCompleto.setLineas(pedidoCompleto.getLineas());
+                    // Ahora importeTotal está correcto:
+                    String fecha = pedidoCompleto.getFechaCreacion() != null
+                            ? pedidoCompleto.getFechaCreacion().toString()
                             : "N/D";
-                    String estado = p.getEstado() != null ? p.getEstado().name() : "N/D";
-                    BigDecimal importe = p.getImporteTotal() != null ? p.getImporteTotal() : BigDecimal.ZERO;
+                    String estado = pedidoCompleto.getEstado() != null
+                            ? pedidoCompleto.getEstado().name() : "N/D";
+                    BigDecimal importe = pedidoCompleto.getImporteTotal() != null
+                            ? pedidoCompleto.getImporteTotal() : BigDecimal.ZERO;
                     System.out.printf("%-5d %-20s %-12s %12.2f%n",
-                            p.getId(), fecha, estado, importe);
+                            pedidoCompleto.getId(), fecha, estado, importe);
                 }
-                // Si deseas, permitir ver detalle de un pedido específico:
+                // Permitir ver detalle de un pedido:
                 System.out.print("¿Ver detalle de algún pedido? Ingrese ID o Enter para omitir: ");
                 String line = scanner.nextLine();
                 if (!line.isBlank()) {
                     try {
                         Long id = Long.valueOf(line.trim());
-                        Optional<Pedido> optP = ((PedidoDaoSql) pedidoDaoSql).buscarPorId(id);
-                        if (optP.isPresent()) {
-                            imprimirDetallePedido(optP.get());
+                        Pedido pedidoCompleto = cargarPedidoCompleto(id);
+                        if (pedidoCompleto != null) {
+                            imprimirDetallePedido(pedidoCompleto);
                         } else {
                             System.out.println("Pedido no encontrado.");
                         }
@@ -563,6 +572,27 @@ public class App {
         }
     }
 
+    /**
+     * Recupera un Pedido con sus líneas desde la base de datos.
+     * Ajusta según tus DAOs/servicios: puede usar servicioPedido o pedidoDaoSql + OrderItemsDao.
+     */
+    private static Pedido cargarPedidoCompleto(Long pedidoId) {
+        try {
+            // Ejemplo usando DAO SQL:
+            Optional<Pedido> opt = ((PedidoDaoSql) pedidoDaoSql).buscarPorId(pedidoId);
+            if (opt.isEmpty()) {
+                return null;
+            }
+            Pedido p = opt.get();
+            // Ahora cargar líneas: asumo que pedidoDaoSql tiene método buscarLineasPorPedido
+            List<LineaPedido> lineas = p.getLineas();
+            p.setLineas(lineas); // esto recalcula los totales internamente
+            return p;
+        } catch (Exception e) {
+            System.out.println("Error cargando pedido completo ID=" + pedidoId + ": " + e.getMessage());
+            return null;
+        }
+    }
     private static void imprimirDetallePedido(Pedido p) throws Exception {
         System.out.println("=== Detalle Pedido ID " + p.getId() + " ===");
         System.out.printf("FechaCreación: %s%n", p.getFechaCreacion());
