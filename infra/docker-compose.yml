@@ -8,6 +8,8 @@ services:
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
     # NO confíes en init automáticos de SQL Server; inicializaremos más abajo manualmente.
 
   mongodb:
@@ -16,6 +18,8 @@ services:
     ports:
       - "27017:27017"
     command: ["--replSet", "rs0"]
+    volumes:
+      - mongodb_data:/data/db
     # No montamos init aquí porque iniciaremos réplica y colecciones manualmente.
 
   # Servicio que espera y ejecuta rs.initiate() para Mongo
@@ -44,4 +48,38 @@ services:
     container_name: tpo_cassandra
     ports:
       - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
     # Inicializaremos Cassandra manualmente con cqlsh.
+
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    volumes:
+      - ./init:/init
+    entrypoint: >
+      bash -c "
+      echo 'Esperando a SQL Server...' &&
+      sleep 15 &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'constraseñaSQL4321234' -d master -i /init/init.sql
+      "
+
+  cassandra-init:
+    image: cassandra:4
+    depends_on:
+      - cassandra
+    volumes:
+      - ./init:/init
+    entrypoint: >
+      bash -c "
+      echo 'Esperando a Cassandra...' &&
+      sleep 20 &&
+      cqlsh cassandra -f /init/init.cql
+      "
+
+volumes:
+  sqlserver_data:
+  mongodb_data:
+  cassandra_data:

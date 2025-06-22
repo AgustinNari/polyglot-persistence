@@ -17,7 +17,7 @@ public class CassandraFactory {
 
         // 1. Crear una sesión inicial sin keyspace
         CqlSession tempSession = CqlSession.builder()
-                .addContactPoint(new InetSocketAddress(host, port))
+                .addContactPoint(new InetSocketAddress("host.docker.internal", port))
                 .withLocalDatacenter(dc)
                 .build();
 
