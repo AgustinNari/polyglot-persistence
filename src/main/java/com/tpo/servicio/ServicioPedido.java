@@ -135,7 +135,7 @@ public class ServicioPedido {
 
         // 7. Persistir el pedido
         Pedido guardado = pedidoDao.guardar(pedido);
-        System.out.println("Pedido creado con ID: " + guardado.getId());
+        //System.out.println("Pedido creado con ID: " + guardado.getId());
 
         // 8. Limpiar carrito
         servicioCarrito.limpiarCarrito(usuarioIdStr);
@@ -164,5 +164,21 @@ public class ServicioPedido {
             // return pedidoDao.listarPorUsuario(usuarioId);
             throw new UnsupportedOperationException("listarPorUsuario no implementado en este DAO");
         }
+    }
+
+    public void cancelarPedido(Long pedidoId) throws Exception {
+        // 1. Obtener pedido
+        Optional<Pedido> optPedido = pedidoDao.buscarPorId(pedidoId);
+        if (optPedido.isEmpty()) {
+            throw new IllegalArgumentException("Pedido no encontrado con ID " + pedidoId);
+        }
+        Pedido pedido = optPedido.get();
+        // 2. Verificar estado
+        if (!pedido.getEstado().equals(EstadoPedido.CREADO)) {
+            throw new IllegalStateException("Solo se puede cancelar un pedido en estado CREADO. Estado actual: " + pedido.getEstado());
+        }
+        // 3. Actualizar estado a CANCELADO
+        pedidoDao.actualizarEstado(pedidoId, EstadoPedido.CANCELADO.name());
+        System.out.println("Pedido con ID " + pedidoId + " ha sido CANCELADO.");
     }
 }

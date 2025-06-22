@@ -119,7 +119,8 @@ public class App {
                 System.out.println("19) Ver historial de cambios de todos los productos (solo admin)");
                 System.out.println("20) Ver reporte de sesión");
                 System.out.println("21) Ver categoría");
-                System.out.println("22) Logout");
+                System.out.println("22) Cancelar pedido");
+                System.out.println("23) Logout");
                 System.out.println("0) Salir");
                 System.out.print("Opción: ");
                 String opcion = scanner.nextLine();
@@ -175,7 +176,8 @@ public class App {
                         break;
                     case "20": opcionMostrarInfoSesion(); break;
                     case "21": opcionVerCategoria(); break;
-                    case "22": logout(); break;
+                    case "22": opcionCancelarPedido(); break;
+                    case "23": logout(); break;
                     case "0":
                         if (usuarioLogueado != null) {
                             // Informar al usuario
@@ -529,9 +531,17 @@ public class App {
             if (lista.isEmpty()) {
                 System.out.println("No tiene pedidos.");
             } else {
-                System.out.printf("%-5s %-20s %-10s%n", "ID", "FechaCreación", "Estado");
+                System.out.println("=== Mis Pedidos ===");
+                // Encabezado alineado
+                System.out.printf("%-5s %-20s %-12s %-12s%n", "ID", "FechaCreación", "Estado", "ImporteTotal");
                 for (Pedido p : lista) {
-                    System.out.printf("%-5d %-20s %-10s%n", p.getId(), p.getFechaCreacion(), p.getEstado());
+                    String fecha = p.getFechaCreacion() != null
+                            ? p.getFechaCreacion().toString()
+                            : "N/D";
+                    String estado = p.getEstado() != null ? p.getEstado().name() : "N/D";
+                    BigDecimal importe = p.getImporteTotal() != null ? p.getImporteTotal() : BigDecimal.ZERO;
+                    System.out.printf("%-5d %-20s %-12s %12.2f%n",
+                            p.getId(), fecha, estado, importe);
                 }
                 // Si deseas, permitir ver detalle de un pedido específico:
                 System.out.print("¿Ver detalle de algún pedido? Ingrese ID o Enter para omitir: ");
@@ -772,15 +782,6 @@ public class App {
         }
     }
 
-    /**
-     * Abrevia texto largo para mostrar en consola (si es más largo que maxLen, trunca y añade "...").
-     */
-    private static String abreviar(String texto, int maxLen) {
-        if (texto == null) return "null";
-        if (texto.length() <= maxLen) return texto;
-        return texto.substring(0, maxLen-3) + "...";
-    }
-
 
     private static void opcionMostrarInfoSesion() {
         try {
@@ -815,6 +816,43 @@ public class App {
         }
     }
 
+    private static void opcionCancelarPedido() {
+        try {
+            if (usuarioLogueado == null) {
+                System.out.println("Debe iniciar sesión para cancelar un pedido.");
+                return;
+            }
+            System.out.print("Ingrese ID del pedido a cancelar: ");
+            String idStr = scanner.nextLine().trim();
+            if (idStr.isEmpty()) {
+                System.out.println("ID vacío. Cancelado.");
+                return;
+            }
+            Long pedidoId;
+            try {
+                pedidoId = Long.valueOf(idStr);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ID de pedido inválido.");
+                return;
+            }
+            // Opcional: verificar que el pedido pertenece al usuario logueado
+            // Si tu DAO o servicio permite listarPorUsuario, verifica:
+            List<Pedido> misPedidos = servicioPedido.listarPedidosPorUsuario(String.valueOf(usuarioLogueado.getId()));
+            boolean esMio = misPedidos.stream().anyMatch(p -> p.getId().equals(pedidoId));
+            if (!esMio) {
+                System.out.println("No existe un pedido con ese ID para este usuario.");
+                return;
+            }
+            // Intentar cancelar
+            servicioPedido.cancelarPedido(pedidoId);
+        } catch (IllegalArgumentException iae) {
+            System.out.println("Error: " + iae.getMessage());
+        } catch (IllegalStateException ise) {
+            System.out.println("No se puede cancelar el pedido: " + ise.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error al cancelar pedido: " + e.getMessage());
+        }
+    }
 
 
 

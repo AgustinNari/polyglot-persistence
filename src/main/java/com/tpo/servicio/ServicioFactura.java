@@ -37,19 +37,19 @@ public class ServicioFactura {
         // 1. Obtener pedido
         Pedido pedido = pedidoDao.buscarPorId(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado con ID " + pedidoId));
-        // 2. Verificar estado del pedido (por ejemplo, solo si está CREADO)
+        // 2. Verificar estado
         if (!pedido.getEstado().equals(EstadoPedido.CREADO)) {
             throw new IllegalStateException("El pedido no está en estado CREADO, no se puede facturar");
         }
-        // 3. Obtener usuario y datos fiscales
+        // 3. Obtener usuario
         Usuario usuario = servicioUsuario.buscarUsuarioPorId(pedido.getUsuarioId());
-        // 4. Construir objeto Factura con datos de pedido
+        // 4. Construir Factura
         Factura factura = new Factura();
         factura.setPedidoId(pedidoId);
         factura.setUsuarioId(pedido.getUsuarioId());
         factura.setFechaEmision(LocalDateTime.now());
-        factura.setEstado(EstadoFactura.PENDIENTE_PAGO); // por ejemplo enum con PENDIENTE, PAGADA, etc.
-        // 5. Calcular importes (usamos los cálculos ya almacenados en Pedido)
+        factura.setEstado(EstadoFactura.PENDIENTE_PAGO);
+        // 5. Calcular importes usando pedido
         BigDecimal bruto = pedido.getImporteBruto();
         BigDecimal desc = pedido.getDescuentoTotal();
         BigDecimal iva = pedido.getImpuestoTotal();
@@ -58,9 +58,11 @@ public class ServicioFactura {
         factura.setDescuentoTotal(desc);
         factura.setImpuestoTotal(iva);
         factura.setImporteTotal(total);
-        // 6. Persistir factura en SQL
+        // 6. Persistir factura
         Factura guardada = facturaDao.guardar(factura);
-        // 7. Mostrar detalle completo por consola
+        // 7. Actualizar estado del pedido a FACTURADO
+        servicioPedido.actualizarEstadoPedido(pedidoId, EstadoPedido.FACTURADO);
+        // 8. Mostrar detalle
         imprimirDetalleFactura(guardada, usuario, pedido);
         return guardada;
     }
