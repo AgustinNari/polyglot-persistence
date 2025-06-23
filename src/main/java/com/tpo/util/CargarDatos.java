@@ -106,7 +106,7 @@ public class CargarDatos {
             u.setEmail("cliente" + i + "@ejemplo.com");
             u.setContrasena("1234567");
 
-            u.setCondicionIVA(com.tpo.modelo.usuario.CondicionIVA.REGIMEN_GENERAL);
+            u.setCondicionIVA(com.tpo.modelo.usuario.CondicionIVA.RESPONSABLE_INSCRIPTO);
 
             Usuario creado = servicioUsuario.registrarUsuario(u);
             System.out.println("  Usuario creado: ID=" + creado.getId()

@@ -2,7 +2,7 @@ package com.tpo.modelo.usuario;
 
 
 public enum CondicionIVA {
-    REGIMEN_GENERAL,
+    RESPONSABLE_INSCRIPTO,
     MONOTRIBUTISTA,
     EXENTO,
     EXPORTADOR;
@@ -11,10 +11,10 @@ public enum CondicionIVA {
     public static CondicionIVA desdeString(String s) {
         if (s == null) return null;
         switch (s.trim().toUpperCase()) {
-            case "REGIMEN_GENERAL":
-            case "REGIMEN GENERAL":
-            case "GENERAL":
-                return REGIMEN_GENERAL;
+            case "RESPONSABLE_INSCRIPTO":
+            case "RESPONSABLE INSCRIPTO":
+            case "INSCRIPTO":
+                return RESPONSABLE_INSCRIPTO;
             case "MONOTRIBUTISTA":
                 return MONOTRIBUTISTA;
             case "EXENTO":

@@ -164,13 +164,13 @@ public class UsuarioDaoSql implements UsuarioDao {
         CondicionIVA cond;
         if (condStr == null) {
 
-            cond = CondicionIVA.REGIMEN_GENERAL;
+            cond = CondicionIVA.RESPONSABLE_INSCRIPTO;
         } else {
             try {
                 cond = CondicionIVA.valueOf(condStr);
             } catch (Exception e) {
 
-                cond = CondicionIVA.REGIMEN_GENERAL;
+                cond = CondicionIVA.RESPONSABLE_INSCRIPTO;
             }
         }
         u.setCondicionIVA(cond);

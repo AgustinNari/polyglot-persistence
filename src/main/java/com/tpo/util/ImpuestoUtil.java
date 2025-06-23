@@ -14,7 +14,7 @@ public class ImpuestoUtil {
             case EXPORTADOR:
                 return BigDecimal.ZERO;
             case MONOTRIBUTISTA:
-            case REGIMEN_GENERAL:
+            case RESPONSABLE_INSCRIPTO:
             default:
                 return baseConDescuento.multiply(alicuota).setScale(2, BigDecimal.ROUND_HALF_UP);
         }

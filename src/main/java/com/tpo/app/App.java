@@ -92,7 +92,7 @@ public class App {
                 }
             } else {
                 System.out.println("Usuario logueado: " + usuarioLogueado.getNombre() + " " + usuarioLogueado.getApellido()
-                        + " (Rol: " + usuarioLogueado.getRol() + ")");
+                        + " (Rol: " + usuarioLogueado.getRol() + ")" + " (Condición: " + usuarioLogueado.getCondicionIVA() + ")");
                 System.out.println("1) Agregar producto al catálogo (solo admin)");
                 System.out.println("2) Listar productos");
                 System.out.println("3) Iniciar carrito");
@@ -203,14 +203,14 @@ public class App {
             System.out.print("Email: "); String email = scanner.nextLine();
             System.out.print("Contraseña: "); String pass = scanner.nextLine();
             System.out.println("Seleccione condición IVA:");
-            System.out.println("(1) REGIMEN_GENERAL");
+            System.out.println("(1) RESPONSABLE_INSCRIPTO");
             System.out.println("(2) MONOTRIBUTISTA");
             System.out.println("(3) EXENTO");
             System.out.println("(4) EXPORTADOR");
             System.out.print("Condición IVA: ");
             String condIvaStr = scanner.nextLine();
             switch (condIvaStr) {
-                case "1": condIvaStr = "REGIMEN_GENERAL"; break;
+                case "1": condIvaStr = "RESPONSABLE_INSCRIPTO"; break;
                 case "2": condIvaStr = "MONOTRIBUTISTA"; break;
                 case "3": condIvaStr = "EXENTO"; break;
                 case "4": condIvaStr = "EXPORTADOR"; break;
@@ -469,10 +469,21 @@ public class App {
         try {
             System.out.print("Ingrese ID de pedido a facturar: ");
             Long pedidoId = Long.parseLong(scanner.nextLine());
-            Factura factura = servicioFactura.facturarPedido(pedidoId);
-            if (factura != null) {
-                System.out.println("Factura creada con ID: " + factura.getId());
+            if (usuarioLogueado.getCondicionIVA() == CondicionIVA.MONOTRIBUTISTA){
+                Factura factura = servicioFactura.facturarPedidoMono(pedidoId);
+
+                if (factura != null) {
+                    System.out.println("Factura creada con ID: " + factura.getId());
+                }
             }
+            else{
+                Factura factura = servicioFactura.facturarPedido(pedidoId);
+
+                if (factura != null) {
+                    System.out.println("Factura creada con ID: " + factura.getId());
+                }
+            }
+
         } catch (Exception e) {
             System.out.println("Error al facturar pedido: " + e.getMessage());
         }
@@ -607,8 +618,14 @@ public class App {
                     Long id = Long.valueOf(line.trim());
                     Optional<Factura> optF = facturaDaoSql.buscarPorId(id);
                     if (optF.isPresent()) {
-                        servicioFactura.imprimirDetalleFactura(optF.get(), usuarioLogueado,
-                                pedidoDaoSql.buscarPorId(optF.get().getPedidoId()).orElse(null));
+                        if (usuarioLogueado.getCondicionIVA() == CondicionIVA.MONOTRIBUTISTA){
+                            servicioFactura.imprimirDetalleFacturaMono(optF.get(), usuarioLogueado,
+                                    pedidoDaoSql.buscarPorId(optF.get().getPedidoId()).orElse(null));
+                        }
+                        else{
+                            servicioFactura.imprimirDetalleFactura(optF.get(), usuarioLogueado,
+                                    pedidoDaoSql.buscarPorId(optF.get().getPedidoId()).orElse(null));
+                        }
                     } else {
                         System.out.println("Factura no encontrada.");
                     }
