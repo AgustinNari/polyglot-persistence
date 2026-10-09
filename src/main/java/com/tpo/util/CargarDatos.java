@@ -1,6 +1,7 @@
 package com.tpo.util;
 
 
+import com.tpo.config.AppConfig;
 import com.tpo.dao.mongo.ProductoDaoMongo;
 import com.tpo.dao.mongo.RegistroCambioProductoDaoMongo;
 import com.tpo.dao.redis.CarritoDaoRedis;
@@ -104,7 +105,7 @@ public class CargarDatos {
             u.setDireccion("Calle Falsa " + (100 + i));
             u.setDocIdentidad("DNI" + (10000000 + i));
             u.setEmail("cliente" + i + "@ejemplo.com");
-            u.setContrasena("1234567");
+            u.setContrasena(AppConfig.getRequiredEnv("DEMO_USER_PASSWORD"));
 
             u.setCondicionIVA(com.tpo.modelo.usuario.CondicionIVA.RESPONSABLE_INSCRIPTO);
 

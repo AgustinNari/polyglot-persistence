@@ -1,83 +1,108 @@
-version: '3.8'
+name: polyglot-persistence
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: tpo_sqlserver
     environment:
-      SA_PASSWORD: "constraseñaSQL4321234"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in infra/.env}
       ACCEPT_EULA: "Y"
     ports:
-      - "1433:1433"
+      - "127.0.0.1:1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
-
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          export SQLCMDPASSWORD="$${MSSQL_SA_PASSWORD}";
+          sqlcmd=/opt/mssql-tools18/bin/sqlcmd;
+          if [ ! -x "$$sqlcmd" ]; then sqlcmd=/opt/mssql-tools/bin/sqlcmd; fi;
+          "$$sqlcmd" -S localhost -U sa -C -b -l 5 -Q "SELECT 1" > /dev/null
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
 
   mongodb:
     image: mongo:6
-    container_name: tpo_mongo
     ports:
-      - "27017:27017"
-    command: ["--replSet", "rs0"]
+      - "127.0.0.1:27017:27017"
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongodb_data:/data/db
-
-
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--host", "localhost:27017", "--eval", "quit(db.adminCommand({ping: 1}).ok === 1 ? 0 : 1)"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
 
   mongo-init:
     image: mongo:6
     depends_on:
-      - mongodb
-    entrypoint:
-      - bash
-      - -c
-      - |
-        echo "Esperando Mongo para iniciar réplica..."
-        sleep 5
-        mongosh --host mongodb:27017 --eval "rs.initiate()"
-
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./mongo/init:/init:ro
+    entrypoint: ["mongosh", "--quiet", "--host", "mongodb:27017", "--file", "/init/init-mongo.js"]
+    restart: "no"
 
   redis:
     image: redis:7
-    container_name: tpo_redis
     ports:
-      - "6379:6379"
-
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   cassandra:
     image: cassandra:4
-    container_name: tpo_cassandra
+    environment:
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RPC_ADDRESS: 0.0.0.0
+      # Single-node development: advertise an address reachable by Java on the host.
+      CASSANDRA_BROADCAST_RPC_ADDRESS: 127.0.0.1
     ports:
-      - "9042:9042"
+      - "127.0.0.1:9042:9042"
     volumes:
       - cassandra_data:/var/lib/cassandra
-
-
+    healthcheck:
+      test: ["CMD", "cqlsh", "localhost", "--connect-timeout=5", "--request-timeout=5", "-e", "SELECT release_version FROM system.local;"]
+      interval: 15s
+      timeout: 15s
+      retries: 40
+      start_period: 60s
 
   sqlserver-init:
-    image: mcr.microsoft.com/mssql-tools
+    # Reuse the server image so sqlcmd matches the installed SQL Server tools.
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      SQLCMDPASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in infra/.env}
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
     volumes:
-      - ./init:/init
-    entrypoint: >
-      bash -c "
-      echo 'Esperando a SQL Server...' &&
-      sleep 15 &&
-      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'constraseñaSQL4321234' -d master -i /init/init.sql
-      "
+      - ./init:/init:ro
+    entrypoint:
+      - bash
+      - -ec
+      - |
+        sqlcmd=/opt/mssql-tools18/bin/sqlcmd
+        if [ ! -x "$$sqlcmd" ]; then sqlcmd=/opt/mssql-tools/bin/sqlcmd; fi
+        exec "$$sqlcmd" -S sqlserver -U sa -C -b -l 30 -d master -i /init/init.sql
+    restart: "no"
 
   cassandra-init:
     image: cassandra:4
     depends_on:
-      - cassandra
+      cassandra:
+        condition: service_healthy
     volumes:
-      - ./init:/init
-    entrypoint: >
-      bash -c "
-      echo 'Esperando a Cassandra...' &&
-      sleep 20 &&
-      cqlsh cassandra -f /init/init.cql
-      "
+      - ./init:/init:ro
+    entrypoint: ["cqlsh", "cassandra", "--connect-timeout=10", "--request-timeout=30", "-f", "/init/init.cql"]
+    restart: "no"
 
 volumes:
   sqlserver_data:

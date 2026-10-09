@@ -4,21 +4,15 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
-import java.io.InputStream;
 
 public class SqlServerFactory {
     private static HikariDataSource dataSource;
 
     static {
         try {
-            Properties props = new Properties();
-            try (InputStream is = SqlServerFactory.class.getClassLoader().getResourceAsStream("application.properties")) {
-                props.load(is);
-            }
-            String url = props.getProperty("sql.url");
-            String user = props.getProperty("sql.user");
-            String pass = props.getProperty("sql.pass");
+            String url = AppConfig.get("sql.url");
+            String user = AppConfig.get("sql.user");
+            String pass = AppConfig.getRequiredEnv("MSSQL_SA_PASSWORD");
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(url);
             config.setUsername(user);

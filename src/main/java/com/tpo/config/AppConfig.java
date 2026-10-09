@@ -22,6 +22,14 @@ public class AppConfig {
         return props.getProperty(key);
     }
 
+    public static String getRequiredEnv(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Variable de entorno requerida: " + name);
+        }
+        return value;
+    }
+
     public static int getInt(String key) {
         String v = props.getProperty(key);
         if (v == null) throw new IllegalArgumentException("Propiedad no encontrada: " + key);
