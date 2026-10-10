@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+<title id="title">Polyglot Persistence Architecture</title>
+<desc id="desc">Console UI and Java service layers connect through data access objects to SQL Server for users and orders, MongoDB for product catalog, Redis for shopping carts and undo/redo, and Cassandra for login and logout session history.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M 0 0 L 6 3 L 0 6 z" fill="#9cb4d4"/></marker>
+</defs>
+<rect width="1200" height="650" rx="26" fill="#0b1220"/>
+<text x="600" y="52" fill="#f2f7ff" font-size="31" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Polyglot Persistence</text>
+<text x="600" y="83" fill="#a8bbd4" font-size="17" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Console-based commerce application · Java 17 · four purpose-specific data stores</text>
+<rect x="340" y="108" width="520" height="76" rx="16" fill="#15243a" stroke="#527eaf" stroke-width="2"/>
+<text x="600" y="139" fill="#ffffff" font-size="23" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Console Interface</text>
+<text x="600" y="163" fill="#bdd0e8" font-size="17" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Authentication · Catalog · Cart · Orders · Billing</text>
+<line x1="600" y1="185" x2="600" y2="219" stroke="#9cb4d4" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="340" y="226" width="520" height="98" rx="16" fill="#182b43" stroke="#6083ac" stroke-width="2"/>
+<text x="600" y="261" fill="#ffffff" font-size="22" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Application Layer</text>
+<text x="600" y="289" fill="#c6d7eb" font-size="17" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Domain Models · Business Services</text>
+<text x="600" y="312" fill="#c6d7eb" font-size="17" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">Data Access Objects (DAOs)</text>
+<line x1="600" y1="326" x2="600" y2="365" stroke="#9cb4d4" stroke-width="3"/>
+<line x1="150" y1="365" x2="1050" y2="365" stroke="#9cb4d4" stroke-width="3"/>
+<g stroke="#9cb4d4" stroke-width="3" marker-end="url(#arrow)">
+<line x1="150" y1="365" x2="150" y2="397"/>
+<line x1="450" y1="365" x2="450" y2="397"/>
+<line x1="750" y1="365" x2="750" y2="397"/>
+<line x1="1050" y1="365" x2="1050" y2="397"/>
+</g>
+<g font-family="Arial, Helvetica, sans-serif">
+<rect x="25" y="407" width="250" height="175" rx="16" fill="#10243a" stroke="#5aa1d4" stroke-width="2"/>
+<rect x="325" y="407" width="250" height="175" rx="16" fill="#112a2b" stroke="#59b99a" stroke-width="2"/>
+<rect x="625" y="407" width="250" height="175" rx="16" fill="#2c2028" stroke="#ea8877" stroke-width="2"/>
+<rect x="925" y="407" width="250" height="175" rx="16" fill="#242039" stroke="#ac91e7" stroke-width="2"/>
+<text x="150" y="446" font-size="23" font-weight="700" text-anchor="middle" fill="#9ed7f7">SQL Server</text>
+<text x="450" y="446" font-size="23" font-weight="700" text-anchor="middle" fill="#a1e8cc">MongoDB</text>
+<text x="750" y="446" font-size="23" font-weight="700" text-anchor="middle" fill="#ffb6a1">Redis</text>
+<text x="1050" y="446" font-size="23" font-weight="700" text-anchor="middle" fill="#d3bcff">Cassandra</text>
+<g fill="#e5ebf5" font-size="17" text-anchor="middle">
+<text x="150" y="484">Users · Roles</text><text x="150" y="513">Orders · Invoices</text><text x="150" y="542">Payments</text>
+<text x="450" y="484">Product catalog</text><text x="450" y="513">Product updates</text><text x="450" y="542">Change history</text>
+<text x="750" y="484">Shopping carts</text><text x="750" y="513">Cart state</text><text x="750" y="542">Undo · Redo</text>
+<text x="1050" y="484">Login events</text><text x="1050" y="513">Logout events</text><text x="1050" y="542">Session history</text>
+</g>
+<text x="600" y="617" font-size="16" text-anchor="middle" fill="#91a7c0">Local demonstration environment · Docker Compose</text>
+</g>
+</svg>

@@ -8,6 +8,8 @@ It combines relational transactions, document storage, in-memory data structures
 
 ## Architecture
 
+[![Architecture diagram showing the Java console application and four specialized databases](docs/architecture/polyglot-architecture.svg)](docs/architecture/polyglot-architecture.svg)
+
 | Database | Responsibilities |
 | --- | --- |
 | Microsoft SQL Server | Users, orders, invoices, and payments |
@@ -16,6 +18,29 @@ It combines relational transactions, document storage, in-memory data structures
 | Apache Cassandra | User login and logout session records |
 
 The application follows a layered organization with domain models, data access objects (DAOs), business services, and a console interface.
+
+## Screenshots
+
+The screenshots show the authenticated console menu, a MongoDB-backed product catalog, a confirmed order with calculated totals, and session records stored in Cassandra. The examples use fictional local demonstration data. Select an image to view it at full resolution.
+
+<table>
+  <tr><th colspan="2">Authenticated Console Menu</th></tr>
+  <tr>
+    <td colspan="2" align="center"><a href="docs/screenshots/main-menu.webp"><img src="docs/screenshots/main-menu.webp" alt="Authenticated administrator console menu with catalog, shopping cart, order, billing and session management options" width="690"></a></td>
+  </tr>
+  <tr>
+    <th>Product Catalog — MongoDB</th>
+    <th>Session History — Cassandra</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/screenshots/product-catalog.webp"><img src="docs/screenshots/product-catalog.webp" alt="MongoDB product listing with two fictional products, IDs, prices and update timestamps" width="420"></a></td>
+    <td align="center"><a href="docs/screenshots/session-history.webp"><img src="docs/screenshots/session-history.webp" alt="User session report with login and logout timestamps and session durations" width="420"></a></td>
+  </tr>
+  <tr><th colspan="2">Confirmed Order — Shopping Cart to SQL Server</th></tr>
+  <tr>
+    <td colspan="2" align="center"><a href="docs/screenshots/confirmed-order.webp"><img src="docs/screenshots/confirmed-order.webp" alt="Order summary with two products, subtotals, taxes, final amount and successful order confirmation" width="860"></a></td>
+  </tr>
+</table>
 
 ## Features
 
