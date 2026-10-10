@@ -1,6 +1,6 @@
 # Polyglot Persistence — Multi-Database E-Commerce System
 
-An academic Java application demonstrating polyglot persistence through a console-based e-commerce system.
+A Java application demonstrating polyglot persistence through a console-based e-commerce system.
 
 The project uses four different database technologies, assigning each one specific responsibilities according to its data model and access patterns.
 
@@ -210,9 +210,9 @@ The repository includes:
 
 This project demonstrates how multiple persistence technologies can coexist within one application.
 
-It is an educational implementation rather than a production-ready distributed commerce platform.
+This is a local development prototype rather than a production-ready distributed commerce platform.
 
-Application user passwords are stored without hashing. This academic limitation is unchanged; do not use real credentials. SQL Server's `sa` account and the local JDBC encryption settings are also intended only for this development environment.
+Application user passwords are stored without hashing. This is a known security limitation; do not use real credentials. SQL Server's `sa` account and the local JDBC encryption settings are also intended only for this development environment.
 
 The project does not implement a web frontend, HTTP API, real payment processing, or production-grade distributed transaction coordination.
 
